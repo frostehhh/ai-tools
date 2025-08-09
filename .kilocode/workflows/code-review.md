@@ -1,8 +1,6 @@
-<input>
-#$ARGUMENTS
-</input>
-
-Review the code in the commits described in <input>
+# Workflow
+1. Ask the user what code will be reviewed.
+2. Review the code described by the user based on the guidelines below
 
 - **Correctness**: Ensure that the changes achieve the expected functionality.
 - **Good Code Standards**: Code demonstrates quality usage of code standards that are suitable based on the context. Best practices are used only when necessary. If there are code standards better than the best practices in
