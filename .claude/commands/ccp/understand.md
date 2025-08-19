@@ -44,7 +44,7 @@ I'll identify established patterns:
 
 **Phase 5: Documentation Synthesis**
 After analysis, I'll provide:
-- **Architecture diagram** (in text/markdown)
+- **Architecture diagram** (with MermaidJS)
 - **Key components** and their responsibilities
 - **Data flow** through the application
 - **Important patterns** to follow

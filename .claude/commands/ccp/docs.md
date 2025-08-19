@@ -157,7 +157,7 @@ I can manage:
 - **Breaking Change Alert** - Warn when docs need migration guide
 - **Cross-Reference** - Update links between docs
 - **Example Generation** - Create usage examples from tests
-- **Diagram Updates** - Update architecture diagrams (text-based)
+- **Diagram Updates** - Update architecture diagrams (MermaidJS)
 - **Dependency Tracking** - Document external service requirements
 
 ### Team Collaboration

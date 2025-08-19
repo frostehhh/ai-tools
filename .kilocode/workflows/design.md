@@ -35,7 +35,7 @@ Create design.md with these sections:
 - Key design decisions
 
 ### System Architecture  
-- High-level component diagram (textual)
+- High-level component diagram (MermaidJS)
 - Data flow and component interactions
 - Integration points and dependencies
 

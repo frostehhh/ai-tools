@@ -59,13 +59,13 @@ The tracer tool guides you through a structured investigation process:
 - **Value**: "precision"
 - **Focus**: Execution flow, call chains, and usage patterns
 - **Best For**: Methods/functions analysis
-- **Output**: Vertical indented flow diagrams with call sequences
+- **Output**: Vertical indented flow diagrams with call sequences using MermaidJS
 
 ### Dependencies Mode
 - **Value**: "dependencies"
 - **Focus**: Structural relationships and bidirectional dependencies
 - **Best For**: Classes/modules analysis
-- **Output**: Bidirectional arrow flow diagrams showing incoming/outgoing dependencies
+- **Output**: Bidirectional arrow flow diagrams showing incoming/outgoing dependencies using MermaidJS
 
 ## Confidence Levels
 
@@ -129,7 +129,7 @@ confidence: "high"
 ### Precision Mode Output
 The tracer provides specific rendering instructions for precision mode:
 
-- **Vertical Indented Flow Style**: Call flow diagrams with proper indentation
+- **Vertical Indented Flow Style**: Call flow diagrams with proper indentation using MermaidJS
 - **Branching & Side Effect Tables**: Conditional logic and side effects analysis
 - **Usage Points**: Context descriptions of where/why methods are called
 - **Entry Points**: Starting points for the execution flow
