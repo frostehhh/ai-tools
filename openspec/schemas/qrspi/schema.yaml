@@ -1,0 +1,207 @@
+name: qrspi
+version: 1
+description: QRSPI is Question, Research, Structure Outline, Plan, Implementation
+artifacts:
+  - id: questions
+    generates: questions.md
+    description: List of questions needed to guide research — only ask what code investigation alone cannot answer
+    instruction: |
+      Identify questions that must be answered by a human before research or planning can proceed.
+      Focus on three categories:
+        1. Business Logic & Requirements — intent, priorities, edge cases
+        2. Design Preferences — architectural or UX choices that affect implementation
+        3. Technical Uncertainties — ambiguities that can't be resolved by reading the codebase
+      Do NOT include questions that can be answered by exploring the codebase.
+    template: questions.md
+  - id: research
+    generates: research.md
+    description: Explore the codebase to understand existing code and functionalities
+    instruction: |
+      Explore the codebase to understand the existing implementation relevant to the task.
+      Depends on questions.md — use the answered questions to guide what to look for.
+
+      Use parallel agents for efficiency:
+        - codebase-locator: Find all files related to the task
+        - codebase-analyzer: Understand how the current implementation works
+        - codebase-pattern-finder: Find similar features or patterns to model after
+
+      For each finding, include a file:line reference.
+      Capture:
+        - Current State: what exists today and how it works
+        - Key Discoveries: important patterns, constraints, conventions
+        - Design Options: at least two approaches with pros/cons
+        - Open Questions: any technical uncertainties that emerged during research
+    template: research.md
+    requires:
+      - questions
+  - id: requirements
+    generates: requirements.md
+    description: |
+      High-level description of the change — motivation, current state, desired end state, and scope boundaries.
+      Depends on research.
+    instruction: |
+      Synthesize research findings into a clear requirements document.
+      Depends on research.md — derive all sections from what was discovered.
+
+      Include:
+        - Why: motivation for the change
+        - Current State Analysis: what exists now, what's missing, key constraints
+        - Desired End State: what the system should do after the change and how to verify it
+        - Key Discoveries: important findings from research with file:line references
+        - What We're NOT Doing: explicitly list out-of-scope items to prevent scope creep
+        - Patterns to Follow: existing code patterns relevant to this change
+    template: requirements.md
+    requires:
+      - research
+  - id: specs
+    generates: specs/**/*.md
+    description: |
+      Detailed specifications with requirements and scenarios.
+      Depends on research and requirements.
+    instruction: |
+      Write detailed specifications for each distinct requirement or component.
+      Depends on research.md and requirements.md.
+
+      For each spec file:
+        - State the requirement clearly
+        - Use WHEN/THEN scenarios to describe behavior
+        - Separate success criteria into Automated Verification (runnable commands) and Manual Verification (human-tested)
+    template: specs/spec.md
+    requires:
+      - research
+      - requirements
+  - id: structureOutline
+    generates: structureOutline.md
+    description: |
+      Technical design decisions and implementation approach.
+      Depends on research, specs, and requirements.
+    instruction: |
+      Design the high-level technical approach and phasing strategy.
+      Depends on research.md, specs, and requirements.md.
+
+      Include:
+        - Context: background motivating the approach
+        - Implementation Approach: high-level strategy and reasoning
+        - Phases: ordered phases, each with a one-line description of what it accomplishes
+        - Goals / Non-Goals: what is and isn't in scope
+        - Decisions: each significant decision with alternatives considered and rationale
+        - Risks / Trade-offs: known risks and how they'll be managed
+    template: structureOutline.md
+    requires:
+      - research
+      - specs
+      - requirements
+
+  - id: plan
+    generates: plan.md
+    description: |
+      Implementation checklist with trackable tasks organized into phases.
+      Depends on research, specs, requirements, and structureOutline.
+    instruction: |
+      Write a complete, phased implementation plan ready for execution.
+      Depends on research.md, specs, requirements.md, and structureOutline.md.
+
+      For each phase:
+        - Describe what the phase accomplishes
+        - List every file that must change with a summary of the change and relevant code snippets
+        - Provide Success Criteria separated into:
+            Automated Verification (commands to run: tests, linting, type checks)
+            Manual Verification (UI, performance, edge cases requiring human judgment)
+        - End with an Implementation Note instructing the agent to pause for human confirmation before proceeding
+
+      After all phases, include:
+        - Testing Strategy (unit, integration, manual steps)
+        - Performance Considerations
+        - Migration Notes (if applicable)
+        - References (ticket, research docs, similar implementations)
+    template: plan.md
+    requires:
+      - research
+      - specs
+      - requirements
+      - structureOutline
+
+apply:
+  requires:
+    - plan
+  tracks: plan.md
+  instruction: |
+    You are tasked with implementing an approved technical plan. These plans contain phases with specific changes and success criteria.
+
+    ## Getting Started
+
+    When given a plan path:
+    - Read the plan completely and check for any existing checkmarks (- [x])
+    - Read the original ticket and all files mentioned in the plan
+    - **Read files fully** - never use limit/offset parameters, you need complete context
+    - Think deeply about how the pieces fit together
+    - Create a todo list to track your progress
+    - Start implementing if you understand what needs to be done
+
+    If no plan path provided, ask for one.
+
+    ## Implementation Philosophy
+
+    Plans are carefully designed, but reality can be messy. Your job is to:
+    - Follow the plan's intent while adapting to what you find
+    - Implement each phase fully before moving to the next
+    - Verify your work makes sense in the broader codebase context
+    - Update checkboxes in the plan as you complete sections
+
+    When things don't match the plan exactly, think about why and communicate clearly. The plan is your guide, but your judgment matters too.
+
+    If you encounter a mismatch:
+    - STOP and think deeply about why the plan can't be followed
+    - Present the issue clearly:
+      ```
+      Issue in Phase [N]:
+      Expected: [what the plan says]
+      Found: [actual situation]
+      Why this matters: [explanation]
+
+      How should I proceed?
+      ```
+
+    ## Verification Approach
+
+    After implementing a phase:
+    - Run the success criteria checks
+    - Fix any issues before proceeding
+    - Update your progress in both the plan and your todos
+    - Check off completed items in the plan file itself using Edit
+    - **Pause for human verification**: After completing all automated verification for a phase, pause and inform the human that the phase is ready for manual testing. Use this format:
+      ```
+      Phase [N] Complete - Ready for Manual Verification
+
+      Automated verification passed:
+      - [List automated checks that passed]
+
+      Please perform the manual verification steps listed in the plan:
+      - [List manual verification items from the plan]
+
+      Let me know when manual testing is complete so I can proceed to Phase [N+1].
+      ```
+
+    If instructed to execute multiple phases consecutively, skip the pause until the last phase. Otherwise, assume you are just doing one phase.
+
+    do not check off items in the manual testing steps until confirmed by the user.
+
+
+    ## If You Get Stuck
+
+    When something isn't working as expected:
+    - First, make sure you've read and understood all the relevant code
+    - Consider if the codebase has evolved since the plan was written
+    - Present the mismatch clearly and ask for guidance
+
+    Use sub-tasks sparingly - mainly for targeted debugging or exploring unfamiliar territory.
+
+    ## Resuming Work
+
+    If the plan has existing checkmarks:
+    - Trust that completed work is done
+    - Pick up from the first unchecked item
+    - Verify previous work only if something seems off
+
+    Remember: You're implementing a solution, not just checking boxes. Keep the end goal in mind and maintain forward momentum.
+

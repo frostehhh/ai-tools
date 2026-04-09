@@ -1,0 +1,12 @@
+name: tasks-only
+version: 1
+description: tasks only
+artifacts:
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist with trackable tasks
+    template: tasks.md
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md
