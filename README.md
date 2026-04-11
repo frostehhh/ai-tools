@@ -9,10 +9,6 @@ Configuration directory for Claude Code containing:
 - `commands/` - Custom slash commands and workflows
 - `settings.local.json` - Local project settings
 
-### `.kilocode/`
-Configuration directory for Kilocode containing:
-- `workflows/` - Kilocode workflow definitions (spec-driven development workflows)
-
 ### `CLAUDE.md`
 Recommended user-level instructions that Claude Code reads automatically. Defines:
 - Interaction style (concise, grammar-sacrificing communication)
