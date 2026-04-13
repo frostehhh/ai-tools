@@ -1,18 +1,16 @@
-# Claude Tools
+# AI Tools
 
-A repository for common Claude and Claude Code commands and utilities
+A repository for common configuration for agentic AI tools like Claude Code and OpenSpec.
 
 ## Directory Structure
 
 ### `.claude/`
 Configuration directory for Claude Code containing:
-- `commands/` - Custom slash commands and workflows
-- `settings.local.json` - Local project settings
 
-### `CLAUDE.md`
-Recommended user-level instructions that Claude Code reads automatically. Defines:
-- Interaction style (concise, grammar-sacrificing communication)
-- Diagram preferences (MermaidJS)
-- Planning requirements (list unresolved questions)
+### `openspec/` - OpenSpec
+A spec-driven development framework for generating structured planning artifacts. This directory contains custom workflows defined under the `schemas` directory.
 
-Global user instructions can also be placed at `~/.claude/CLAUDE.md`
+To work with OpenSpec, run `openspec init` in the project you need to work in.
+
+See the [OpenSpec repository](https://github.com/Fission-AI/OpenSpec) for more information
+
