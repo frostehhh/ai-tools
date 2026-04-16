@@ -2,21 +2,38 @@ name: qrspi
 version: 1
 description: QRSPI is Question, Research, Structure Outline, Plan, Implementation
 artifacts:
+  - id: task
+    generates: task.md
+    description: |
+      Prompt the user to provide the task description.
+    instruction: |
+      Prompt the user to provide the task description. Before proceeding to the next step, ask the user
+      if the created artifact is good.
+    template: task.md
   - id: questions
     generates: questions.md
-    description: List of questions needed to guide research — only ask what code investigation alone cannot answer
+    description: |
+      Given a task description, create a list of questions needed to guide code exploration and research
+      for the purpose of understanding the current state of the source code. This artifact may be revisited
+      in case the research artifact is lacking. 
     instruction: |
-      Identify questions that must be answered by a human before research or planning can proceed.
-      Focus on three categories:
-        1. Business Logic & Requirements — intent, priorities, edge cases
-        2. Design Preferences — architectural or UX choices that affect implementation
-        3. Technical Uncertainties — ambiguities that can't be resolved by reading the codebase
-      Do NOT include questions that can be answered by exploring the codebase.
+      Given a task description, do the following:
+      - Provide a list of questions that will be used to guide further code exploration and research.
+
+      After artifact creation, instruct the user to create a new context window. Provide a prompt that can
+      be used to initiate the research artifact for the current spec. Use the following template:
+      "Continue the [feature] OpenSpec change by proceeding the research artifact"
     template: questions.md
+    requires:
+      - task
   - id: research
     generates: research.md
-    description: Explore the codebase to understand existing code and functionalities
+    description: |
+      Explore the codebase to understand existing code and functionalities. Depends only on questions.md.
+      NOTE: Do not include the task description to keep the research as objective as possible. The artifact
+      aims to describe the current state of the source code.
     instruction: |
+      IMPORTANT: Do not read the task.md file.
       Explore the codebase to understand the existing implementation relevant to the task.
       Depends on questions.md — use the answered questions to guide what to look for.
 
@@ -28,56 +45,45 @@ artifacts:
       For each finding, include a file:line reference.
       Capture:
         - Current State: what exists today and how it works
-        - Key Discoveries: important patterns, constraints, conventions
-        - Design Options: at least two approaches with pros/cons
-        - Open Questions: any technical uncertainties that emerged during research
+        - Key Discoveries: important patterns, constraints, conventions, potential complexities, edge cases
+        - Open Questions: Questions may be any of the following - any technical uncertainties that require human judgement,
+          business logic clarification. After a question is answered, remove it from here, and move it to Resolved Questions
+        - Resolved Questions: Tracking of answered open questions. Lists the question and the answer
     template: research.md
     requires:
       - questions
-  - id: requirements
-    generates: requirements.md
+  - id: design
+    generates: design.md
     description: |
       High-level description of the change — motivation, current state, desired end state, and scope boundaries.
       Depends on research.
     instruction: |
-      Synthesize research findings into a clear requirements document.
-      Depends on research.md — derive all sections from what was discovered.
+      Synthesize research findings into a clear design document.
+      Depends on task.md and research.md — derive all sections from what was discovered.
 
       Include:
         - Why: motivation for the change
         - Current State Analysis: what exists now, what's missing, key constraints
         - Desired End State: what the system should do after the change and how to verify it
+        - Design Options. At least 2 options on how the solution can be designed
         - Key Discoveries: important findings from research with file:line references
         - What We're NOT Doing: explicitly list out-of-scope items to prevent scope creep
         - Patterns to Follow: existing code patterns relevant to this change
-    template: requirements.md
+        - Design Questions: open-ended questions to explore how the design options can be adjusted. After a
+          question is answered, remove it from here, and move it to Resolved Questions
+        - Resolved Design Questions: Tracking of answered design questions. Lists the question and the answer   
+    template: design.md
     requires:
+      - task
       - research
-  - id: specs
-    generates: specs/**/*.md
-    description: |
-      Detailed specifications with requirements and scenarios.
-      Depends on research and requirements.
-    instruction: |
-      Write detailed specifications for each distinct requirement or component.
-      Depends on research.md and requirements.md.
-
-      For each spec file:
-        - State the requirement clearly
-        - Use WHEN/THEN scenarios to describe behavior
-        - Separate success criteria into Automated Verification (runnable commands) and Manual Verification (human-tested)
-    template: specs/spec.md
-    requires:
-      - research
-      - requirements
   - id: structureOutline
     generates: structureOutline.md
     description: |
       Technical design decisions and implementation approach.
-      Depends on research, specs, and requirements.
+      Depends on research, and design.
     instruction: |
       Design the high-level technical approach and phasing strategy.
-      Depends on research.md, specs, and requirements.md.
+      Depends on task.md, research.md, and design.md.
 
       Include:
         - Context: background motivating the approach
@@ -88,18 +94,44 @@ artifacts:
         - Risks / Trade-offs: known risks and how they'll be managed
     template: structureOutline.md
     requires:
+      - task
       - research
-      - specs
-      - requirements
+      - design
 
   - id: plan
     generates: plan.md
     description: |
       Implementation checklist with trackable tasks organized into phases.
-      Depends on research, specs, requirements, and structureOutline.
+      Depends on research, design, and structureOutline.
     instruction: |
       Write a complete, phased implementation plan ready for execution.
-      Depends on research.md, specs, requirements.md, and structureOutline.md.
+      Depends on task.md, research.md, design.md, and structureOutline.md.
+
+      <template>
+        Guidelines:
+        - Group related tasks under ## numbered headings
+        - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+        - Tasks should be small enough to complete in one session
+        - Order tasks by dependency (what must be done first?)
+
+        Example:
+        ```
+        ## Phase 1. Setup
+
+        - [ ] 1.1 Create new module structure
+        - [ ] 1.2 Add dependencies to package.json
+
+        ## Phase 2. Core Implementation
+
+        - [ ] 2.1 Implement data export function
+        - [ ] 2.2 Add CSV formatting utilities
+        ```
+
+        Reference specs for what needs to be built, design for how to build it.
+        Each task should be verifiable - you know when it's done.
+      </template>
+      **IMPORTANT: Follow the template in the <template> tag exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
 
       For each phase:
         - Describe what the phase accomplishes
@@ -116,11 +148,10 @@ artifacts:
         - References (ticket, research docs, similar implementations)
     template: plan.md
     requires:
+      - task
       - research
-      - specs
-      - requirements
+      - design
       - structureOutline
-
 apply:
   requires:
     - plan
@@ -184,7 +215,7 @@ apply:
 
     If instructed to execute multiple phases consecutively, skip the pause until the last phase. Otherwise, assume you are just doing one phase.
 
-    do not check off items in the manual testing steps until confirmed by the user.
+    Do not check off items in the manual testing steps until confirmed by the user.
 
 
     ## If You Get Stuck
