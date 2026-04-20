@@ -17,8 +17,16 @@ artifacts:
       for the purpose of understanding the current state of the source code. This artifact may be revisited
       in case the research artifact is lacking. 
     instruction: |
-      Given a task description, do the following:
-      - Provide a list of questions that will be used to guide further code exploration and research.
+      Ask the user to share any relevant code or references before starting the research. Explore the provided
+      code references.
+
+      Use parallel agents for efficiency:
+        - codebase-locator: Find all files related to the task
+        - codebase-analyzer: Understand how the current implementation works
+        - codebase-pattern-finder: Find similar features or patterns to model after
+
+      Based on the task description and the initially shared code and references, provide a list of questions
+      that will be used to guide further code exploration and research.
 
       After artifact creation, instruct the user to create a new context window. Provide a prompt that can
       be used to initiate the research artifact for the current spec. Use the following template:
