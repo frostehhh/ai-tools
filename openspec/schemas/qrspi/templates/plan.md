@@ -14,14 +14,27 @@
 
 ### Changes Required
 
-#### 1. [Component/File Group]
+#### 1. <!-- Task Group Name -->
 
-**File**: `path/to/file.ext`
-**Changes**: <!-- Summary of changes -->
-
-```
-// Specific code to add/modify
-```
+- [ ] 1 <!-- Task Group Name -->
+  - [ ] 1.1 <!-- Task description -->
+    **File/s**: `path/to/file.ext`
+    **Changes**: <!-- Summary of changes -->
+      - <!-- Change 1 -->
+      - <!-- Change 2 -->
+      - <!-- Change 3 -->
+      ```
+      // Specific code to add/modify
+      ```
+  - [ ] 1.2 <!-- Task description -->
+    **File/s**: `path/to/file.ext`
+    **Changes**: <!-- Summary of changes -->
+      - <!-- Change 1 -->
+      - <!-- Change 2 -->
+      - <!-- Change 3 -->
+      ```
+      // Specific code to add/modify
+      ```
 
 ### Success Criteria
 
@@ -47,16 +60,27 @@
 
 <!-- What this phase accomplishes -->
 
-### Changes Required
+#### 1. <!-- Task Group Name -->
 
-#### 1. [Component/File Group]
-
-**File**: `path/to/file.ext`
-**Changes**: <!-- Summary of changes -->
-
-```
-// Specific code to add/modify
-```
+- [ ] 1 <!-- Task Group Name -->
+  - [ ] 1.1 <!-- Task description -->
+    **File/s**: `path/to/file.ext`
+    **Changes**: <!-- Summary of changes -->
+      - <!-- Change 1 -->
+      - <!-- Change 2 -->
+      - <!-- Change 3 -->
+      ```
+      // Specific code to add/modify
+      ```
+  - [ ] 1.2 <!-- Task description -->
+    **File/s**: `path/to/file.ext`
+    **Changes**: <!-- Summary of changes -->
+      - <!-- Change 1 -->
+      - <!-- Change 2 -->
+      - <!-- Change 3 -->
+      ```
+      // Specific code to add/modify
+      ```
 
 ### Success Criteria
 
@@ -79,7 +103,7 @@
 - <!-- What to test -->
 - <!-- Key edge cases -->
 
-### Integration Tests
+### E2E Tests
 
 - <!-- End-to-end scenarios -->
 
@@ -99,6 +123,5 @@
 
 ## References
 
-- Original ticket: `<!-- thoughts/allison/tickets/eng_XXXX.md -->`
-- Related research: `<!-- thoughts/shared/research/relevant.md -->`
+- Related specs: `<!-- openspec/changes/**/relevant.md -->`
 - Similar implementation: `<!-- file:line -->`
