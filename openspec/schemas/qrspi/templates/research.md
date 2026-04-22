@@ -9,18 +9,6 @@
 - <!-- Constraint discovered: file:line -->
 - <!-- Potential complexity or edge case: file:line -->
 
-## Design Options
-
-### Option A: [Name]
-
-**Pros:**
-**Cons:**
-
-### Option B: [Name]
-
-**Pros:**
-**Cons:**
-
 ## Open Questions
 
 <!-- 
