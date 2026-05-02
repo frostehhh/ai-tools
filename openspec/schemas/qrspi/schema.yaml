@@ -57,6 +57,8 @@ artifacts:
         - Open Questions: Questions may be any of the following - any technical uncertainties that require human judgement,
           business logic clarification. After a question is answered, remove it from here, and move it to Resolved Questions
         - Resolved Questions: Tracking of answered open questions. Lists the question and the answer
+      
+      Before proceeding to the next step, ask the user if the created artifact is good.
     template: research.md
     requires:
       - questions
@@ -80,6 +82,8 @@ artifacts:
         - Design Questions: open-ended questions to explore how the design options can be adjusted. After a
           question is answered, remove it from here, and move it to Resolved Questions
         - Resolved Design Questions: Tracking of answered design questions. Lists the question and the answer   
+    
+      Before proceeding to the next step, ask the user if the created artifact is good.
     template: design.md
     requires:
       - task
@@ -100,6 +104,8 @@ artifacts:
         - Goals / Non-Goals: what is and isn't in scope
         - Decisions: each significant decision with alternatives considered and rationale
         - Risks / Trade-offs: known risks and how they'll be managed
+    
+      Before proceeding to the next step, ask the user if the created artifact is good.
     template: structureOutline.md
     requires:
       - task
@@ -153,6 +159,8 @@ artifacts:
         - Performance Considerations
         - Migration Notes (if applicable)
         - References (ticket, research docs, similar implementations)
+
+      Before proceeding to the next step, ask the user if the created artifact is good.
     template: plan.md
     requires:
       - task
