@@ -4,6 +4,9 @@ A repository for common configuration for agentic AI tools like Claude Code and 
 
 ## Directory Structure
 
+### `.agents/`
+Generic AI config directory created with Vercel Skills `npx skills *`
+
 ### `.claude/`
 Configuration directory for Claude Code
 
