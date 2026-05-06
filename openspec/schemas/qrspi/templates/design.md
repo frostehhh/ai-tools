@@ -34,6 +34,25 @@
 
 <!-- Existing code patterns relevant to this change that will be followed for the implementation -->
 
+1. Pattern Name
+**Description**: <!-- Pattern description with file:line references -->
+```
+<!-- Code snippet of pattern -->
+```
+
+2. Pattern Name
+**Description**: <!-- Pattern description with file:line references -->
+```
+<!-- Code snippet of pattern -->
+```
+
+3. Pattern Name
+**Description**: <!-- Pattern description with file:line references -->
+```
+<!-- Code snippet of pattern -->
+```
+
+
 ## Design Questions
 
 <!-- 
