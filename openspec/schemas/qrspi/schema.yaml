@@ -30,7 +30,7 @@ artifacts:
 
       After artifact creation, instruct the user to create a new context window. Provide a prompt that can
       be used to initiate the research artifact for the current spec. Use the following template:
-      "Continue the [feature] OpenSpec change by proceeding the research artifact"
+      "Continue the [feature] OpenSpec change by proceeding to the research artifact"
     template: questions.md
     requires:
       - task
@@ -58,7 +58,9 @@ artifacts:
           business logic clarification. After a question is answered, remove it from here, and move it to Resolved Questions
         - Resolved Questions: Tracking of answered open questions. Lists the question and the answer
       
-      Before proceeding to the next step, ask the user if the created artifact is good.
+      After artifact creation, ask the user if the created artifact is good, and instruct the user to create a new context window. Provide a prompt that can
+      be used to initiate the research artifact for the current spec. Use the following template:
+      "Continue the [feature] OpenSpec change by proceeding to the design artifact"
     template: research.md
     requires:
       - questions
