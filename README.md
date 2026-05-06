@@ -5,7 +5,7 @@ A repository for common configuration for agentic AI tools like Claude Code and 
 ## Directory Structure
 
 ### `.claude/`
-Configuration directory for Claude Code containing:
+Configuration directory for Claude Code
 
 ### `openspec/` - OpenSpec
 A spec-driven development framework for generating structured planning artifacts. This directory contains custom workflows defined under the `schemas` directory.
