@@ -13,6 +13,8 @@ artifacts:
   - id: questions
     generates: questions.md
     description: |
+      This artifact is for research questions to guide the research artifact creation.
+      
       Given a task description, create a list of questions needed to guide code exploration and research
       for the purpose of understanding the current state of the source code. This artifact may be revisited
       in case the research artifact is lacking. 
@@ -95,6 +97,11 @@ artifacts:
     description: |
       Technical design decisions and implementation approach.
       Depends on research, and design.
+
+      Things you can ask the agent for
+      - Reorder phases for better vertical slicing - instead of individual layers per phase (DB -> API -> frontend), wire multiple systems together in a way that can be run/tested in a single phase, then refine business logic later
+      - Add code snippets to implementation or validation steps
+      - Ask the agent to go find answers for parts that are ambiguous
     instruction: |
       Design the high-level technical approach and phasing strategy.
       Depends on task.md, research.md, and design.md.
