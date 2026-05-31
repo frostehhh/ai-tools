@@ -1,6 +1,8 @@
 ---
 name: challenge-mode
 description: Activate aggressive intellectual challenge mode. Use when user wants honest pushback, wants to stress-test a decision, break out of an echo chamber, or says "challenge me" / "challenge mode".
+tags:
+  - challenge
 ---
 
 # Challenge Mode
