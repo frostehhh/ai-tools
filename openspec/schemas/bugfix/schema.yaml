@@ -1,0 +1,207 @@
+name: bugfix
+version: 1
+description: Bugfix is Task, Research, Design, Tasks — a focused flow for diagnosing and fixing bugs
+artifacts:
+  - id: task
+    generates: task.md
+    description: |
+      Capture the initial bug details from the user — what is broken, how to reproduce it,
+      and the expected vs. actual behavior.
+    instruction: |
+      Prompt the user to provide the bug details. Capture as much of the following as possible:
+        - Summary: a one-line description of the bug
+        - Reproduction Steps: the exact steps to trigger the bug
+        - Expected Behavior: what should happen
+        - Actual Behavior: what actually happens (include error messages, stack traces, logs)
+        - Environment: version, OS, browser, configuration, or any other relevant context
+        - Severity / Impact: who is affected and how badly
+        - Initial References: any code, links, or files the user can point to
+
+      Do not investigate the codebase yet — this artifact only records the reported symptoms.
+      Before proceeding to the next step, ask the user if the created artifact is good.
+    template: task.md
+  - id: research
+    generates: research.md
+    description: |
+      Investigate the codebase to find the root cause of the bug.
+      Depends on the bug details in task.md.
+    instruction: |
+      Investigate the codebase to locate the source of the bug and understand why it happens.
+      Depends on task.md — use the reported symptoms and reproduction steps to guide the search.
+
+      Use parallel agents for efficiency:
+        - codebase-locator: Find all files related to the buggy behavior
+        - codebase-analyzer: Understand how the current implementation works and where it breaks
+        - codebase-pattern-finder: Find similar code paths that work correctly to compare against
+
+      For each finding, include a file:line reference.
+      Capture:
+        - Root Cause: the underlying reason the bug occurs, with file:line references
+        - How It Breaks: the code path that produces the incorrect behavior
+        - Affected Areas: other code that depends on or is affected by the buggy code
+        - Key Discoveries: relevant patterns, constraints, conventions, edge cases
+        - Open Questions: technical uncertainties or business-logic clarifications still needed.
+          After a question is answered, remove it from here and move it to Resolved Questions
+        - Resolved Questions: tracking of answered questions, listing the question and the answer
+
+      After artifact creation, ask the user if the created artifact is good, and instruct the user
+      to create a new context window. Provide a prompt that can be used to initiate the design artifact
+      for the current spec. Use the following template:
+      "Continue the [bug] OpenSpec change by proceeding to the design artifact"
+    template: research.md
+    requires:
+      - task
+  - id: design
+    generates: design.md
+    description: |
+      Define the fix approach — root cause summary, fix options, and chosen direction.
+      Depends on task and research.
+    instruction: |
+      Synthesize the research into a clear fix design.
+      Depends on task.md and research.md — derive all sections from the reported bug and the root cause found.
+
+      Include:
+        - Root Cause Summary: a concise statement of why the bug happens, with file:line references
+        - Desired Behavior: what the system should do after the fix and how to verify it
+        - Fix Options: at least 2 options for fixing the bug, with trade-offs for each
+        - Recommended Approach: the chosen option and the reasoning behind it
+        - Regression Risk: what could break and how the fix avoids regressions
+        - What We're NOT Doing: explicitly list out-of-scope items to prevent scope creep
+        - Patterns to Follow: existing code patterns relevant to this fix with file:line references
+        - Design Questions: open-ended questions to refine the fix approach. After a question is
+          answered, remove it from here and move it to Resolved Design Questions
+        - Resolved Design Questions: tracking of answered design questions, listing the question and the answer
+
+      Before proceeding to the next step, ask the user if the created artifact is good.
+    template: design.md
+    requires:
+      - task
+      - research
+  - id: tasks
+    generates: tasks.md
+    description: |
+      Implementation checklist with trackable tasks for applying the fix.
+      Depends on task, research, and design.
+    instruction: |
+      Write a complete, trackable implementation checklist for the fix.
+      Depends on task.md, research.md, and design.md.
+
+      <template>
+        Guidelines:
+        - Group related tasks under ## numbered headings
+        - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+        - Tasks should be small enough to complete in one session
+        - Order tasks by dependency (what must be done first?)
+        - Include a task to add or update a regression test that fails before the fix and passes after
+
+        Example:
+        ```
+        ## 1. Fix
+
+        - [ ] 1.1 Correct the off-by-one in the loop bound
+        - [ ] 1.2 Guard against the null input
+
+        ## 2. Verification
+
+        - [ ] 2.1 Add a regression test reproducing the original bug
+        - [ ] 2.2 Run the full test suite
+        ```
+
+        Reference design.md for how to fix it, research.md for where the bug lives.
+        Each task should be verifiable - you know when it's done.
+      </template>
+      **IMPORTANT: Follow the template in the <template> tag exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+
+      Include success criteria separated into:
+        - Automated Verification (commands to run: tests, linting, type checks, regression test)
+        - Manual Verification (reproduction steps that should now pass, edge cases)
+
+      Before proceeding to the next step, ask the user if the created artifact is good.
+    template: tasks.md
+    requires:
+      - task
+      - research
+      - design
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md
+  instruction: |
+    You are tasked with implementing an approved bugfix. The tasks file contains a trackable checklist
+    and success criteria.
+
+    ## Getting Started
+
+    When given a tasks path:
+    - Read tasks.md completely and check for any existing checkmarks (- [x])
+    - Read the original task.md, research.md, and design.md and all files mentioned in them
+    - **Read files fully** - never use limit/offset parameters, you need complete context
+    - Confirm you can reproduce the bug before changing anything
+    - Create a todo list to track your progress
+    - Start implementing once you understand the root cause and the fix
+
+    If no tasks path provided, ask for one.
+
+    ## Implementation Philosophy
+
+    Plans are carefully designed, but reality can be messy. Your job is to:
+    - Follow the design's intent while adapting to what you find
+    - Make the smallest change that correctly fixes the root cause
+    - Add a regression test that fails before your fix and passes after
+    - Verify your work makes sense in the broader codebase context
+    - Update checkboxes in tasks.md as you complete them
+
+    If you encounter a mismatch:
+    - STOP and think deeply about why the design can't be followed
+    - Present the issue clearly:
+      ```
+      Issue:
+      Expected: [what the design says]
+      Found: [actual situation]
+      Why this matters: [explanation]
+
+      How should I proceed?
+      ```
+
+    ## Verification Approach
+
+    After implementing the fix:
+    - Run the success criteria checks
+    - Confirm the regression test fails without the fix and passes with it
+    - Confirm the original reproduction steps no longer trigger the bug
+    - Fix any issues before proceeding
+    - Check off completed items in tasks.md using Edit
+    - **Pause for human verification**: After all automated verification passes, pause and inform the
+      human that the fix is ready for manual testing. Use this format:
+      ```
+      Fix Complete - Ready for Manual Verification
+
+      Automated verification passed:
+      - [List automated checks that passed]
+
+      Please perform the manual verification steps:
+      - [List manual verification items from tasks.md]
+
+      Let me know when manual testing is complete.
+      ```
+
+    Do not check off manual testing items until confirmed by the user.
+
+    ## If You Get Stuck
+
+    When something isn't working as expected:
+    - First, make sure you've read and understood all the relevant code
+    - Consider if the codebase has evolved since the research was written
+    - Present the mismatch clearly and ask for guidance
+
+    Use sub-tasks sparingly - mainly for targeted debugging or exploring unfamiliar territory.
+
+    ## Resuming Work
+
+    If tasks.md has existing checkmarks:
+    - Trust that completed work is done
+    - Pick up from the first unchecked item
+    - Verify previous work only if something seems off
+
+    Remember: You're fixing the root cause, not just suppressing the symptom.
