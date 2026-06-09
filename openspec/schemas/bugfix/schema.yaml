@@ -77,8 +77,8 @@ artifacts:
     requires:
       - task
       - research
-  - id: tasks
-    generates: tasks.md
+  - id: plan
+    generates: plan.md
     description: |
       Implementation checklist with trackable tasks for applying the fix.
       Depends on task, research, and design.
@@ -113,20 +113,30 @@ artifacts:
       **IMPORTANT: Follow the template in the <template> tag exactly.** The apply phase parses
       checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
 
-      Include success criteria separated into:
-        - Automated Verification (commands to run: tests, linting, type checks, regression test)
-        - Manual Verification (reproduction steps that should now pass, edge cases)
+      For each phase:
+        - Describe what the phase accomplishes
+        - List every file that must change with a summary of the change and relevant code snippets
+        - Provide Success Criteria separated into:
+            Automated Verification (commands to run: tests, linting, type checks)
+            Manual Verification (UI, performance, edge cases requiring human judgment)
+        - End with an Implementation Note instructing the agent to pause for human confirmation before proceeding
+
+      After all phases, include:
+        - Testing Strategy (unit, integration, manual steps)
+        - Performance Considerations
+        - Migration Notes (if applicable)
+        - References (ticket, research docs, similar implementations)
 
       Before proceeding to the next step, ask the user if the created artifact is good.
-    template: tasks.md
+    template: plan.md
     requires:
       - task
       - research
       - design
 apply:
   requires:
-    - tasks
-  tracks: tasks.md
+    - plan
+  tracks: plan.md
   instruction: |
     You are tasked with implementing an approved bugfix. The tasks file contains a trackable checklist
     and success criteria.
