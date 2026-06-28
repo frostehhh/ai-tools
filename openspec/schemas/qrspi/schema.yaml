@@ -79,7 +79,14 @@ artifacts:
         - Why: motivation for the change
         - Current State Analysis: what exists now, what's missing, key constraints
         - Desired End State: what the system should do after the change and how to verify it
-        - Design Options. At least 2 options on how the solution can be designed
+        - Design Options
+          - At least 2 options on how the solution can be designed
+          - Lead with your recommended option and explain why
+          - For each option, mention the reasoning and the tradeoffs
+          - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
+          - Ask after each section whether it looks right so far
+          - Cover: architecture, components, data flow, error handling, testing
+          - Be ready to go back and clarify if something doesn't make sense
         - Key Discoveries: important findings from research with file:line references
         - What We're NOT Doing: explicitly list out-of-scope items to prevent scope creep
         - Patterns to Follow: existing code patterns relevant to this change
@@ -113,7 +120,13 @@ artifacts:
         - Goals / Non-Goals: what is and isn't in scope
         - Decisions: each significant decision with alternatives considered and rationale
         - Risks / Trade-offs: known risks and how they'll be managed
-    
+
+      Implementation Approach Guidelines:
+      - Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
+      - For each unit, you should be able to answer: what does it do, how do you use it, and what does it depend on?
+      - Can someone understand what a unit does without reading its internals? Can you change the internals without breaking consumers? If not, the boundaries need work.
+      - Smaller, well-bounded units are also easier for you to work with - you reason better about code you can hold in context at once, and your edits are more reliable when files are focused. When a file grows large, that's often a signal that it's doing too much.
+
       Before proceeding to the next step, ask the user if the created artifact is good.
     template: structureOutline.md
     requires:
