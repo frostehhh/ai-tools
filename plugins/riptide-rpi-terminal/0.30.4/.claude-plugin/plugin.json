@@ -1,0 +1,8 @@
+{
+  "name": "rpi",
+  "version": "0.30.4",
+  "description": "Research-Plan-Implement workflow support for interactive Claude Code terminal sessions",
+  "author": {
+    "name": "HumanLayer"
+  }
+}

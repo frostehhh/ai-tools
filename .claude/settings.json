@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "ai-tools-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "."
+      }
+    }
+  },
+  "enabledPlugins": {
+    "humanlayer@ai-tools-plugins": true
+  }
+}

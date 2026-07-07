@@ -3,7 +3,9 @@
     "allow": [
       "Bash(find:*)",
       "Bash(ls:*)",
-      "Bash(npx skills *)"
+      "Bash(npx skills *)",
+      "Read(//Users/luiscapuyon/.claude/plugins/**)",
+      "Read(//Users/luiscapuyon/**)"
     ],
     "deny": []
   }

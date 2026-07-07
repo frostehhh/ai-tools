@@ -1,0 +1,16 @@
+{
+  "name": "ai-tools-plugins",
+  "owner": {
+    "name": "frostehhh"
+  },
+  "metadata": {
+    "description": "Vendored plugins for the ai-tools repo"
+  },
+  "plugins": [
+    {
+      "name": "humanlayer",
+      "source": "./plugins/riptide-rpi-terminal/0.30.4",
+      "description": "humanlayer terminal "
+    }
+  ]
+}
