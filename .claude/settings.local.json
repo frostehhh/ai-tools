@@ -5,7 +5,8 @@
       "Bash(ls:*)",
       "Bash(npx skills *)",
       "Read(//Users/luiscapuyon/.claude/plugins/**)",
-      "Read(//Users/luiscapuyon/**)"
+      "Read(//Users/luiscapuyon/**)",
+      "Bash(openspec *)"
     ],
     "deny": []
   },
