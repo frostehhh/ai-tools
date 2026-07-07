@@ -1,86 +1,99 @@
-## Why
+---
+date: <!-- ISO date+time with timezone -->
+git_commit: <!-- current commit hash -->
+branch: <!-- current branch name -->
+repository: <!-- repository name -->
+task: <!-- task/change slug -->
+type: design
+status: draft
+---
 
-<!-- Describe the motivation for this change -->
+### Summary of change request
 
-## Current State Analysis
+[summary of what the user wants to build based on their request and the ticket]
 
-<!-- What exists now, what's missing, and key constraints discovered during research -->
+### Current State
 
-## Desired End State
+- [what the user sees or experiences today — product behavior, UX gaps, user pain points — no file paths or function names]
+- ..
+- ..
 
-<!-- Specification of desired end state after this change is complete and how to verify it-->
+### Desired End State
 
-## Design Options
-### Design Option A
+- [what will be true when this work is done]
+- [user story, problems that will be solved, new things a user can do]
+- ..
 
-<!-- Design Option A to reach the desired end state -->
+### What we're not doing
 
-### Design Option B
+- [things that are out of scope]
+- ..
 
-<!-- Design Option B to reach the desired end state -->
+### Proposed End State Architecture
 
-## Key Discoveries
+Before:
 
-<!-- Important findings from research with file:line references -->
-- 
-- 
-
-## What We're NOT Doing
-
-<!-- Explicitly list out-of-scope items to prevent scope creep -->
-- 
-
-## Patterns to Follow
-
-<!-- Existing code patterns relevant to this change that will be followed for the implementation -->
-
-1. Pattern Name
-**Description**: <!-- Pattern description with file:line references -->
-```
-<!-- Code snippet of pattern -->
+```mermaid
+[one or more diagrams of the before state, logic flow, etc]
 ```
 
-2. Pattern Name
-**Description**: <!-- Pattern description with file:line references -->
-```
-<!-- Code snippet of pattern -->
-```
+After:
 
-3. Pattern Name
-**Description**: <!-- Pattern description with file:line references -->
-```
-<!-- Code snippet of pattern -->
+```mermaid
+[one or more diagrams of the before state, logic flow, etc]
 ```
 
+[concise outline of the proposed end state architecture with description, psuedocode, etc]
 
-## Design Questions
+### Design Questions
 
-<!-- 
-    Questions to further explore the design options. Includes but not limited to:
-    - Technical Uncertainty
-    - Business logic clarification
-    - Design Decision needed
--->
-1. Question A 
-2. Question B
-3. Question C
+#### [title first question]
 
-## Resolved Design Questions
+[the design question]
 
-<!-- List of answered Design Questions -->
-<!-- 
-Example 
-### [Question number Resolved]. Question A
--->
+- Option A: ...
+[optional: short code snippet, mermaid diagram, pseudocode, etc]
+- Option B: ...
+[optional: short code snippet, mermaid diagram, pseudocode, etc]
+- ..
 
-### 1. Question A
+Reccomendation: [....]
 
-<!-- Answer for Question A -->
+#### [title second design question]
 
-### 2. Question B
+...
 
-<!-- Answer for Question B -->
 
-### 3. Question C
+### Resolved Design Questions
 
-<!-- Answer for Question C -->
+#### [title resolved question]
+
+[option chosen] - [rationale] - [pattern to follow or psuedocode, mermaid diagram, etc]
+
+[brief summary of options not chosen with rationale]
+
+
+#### [ title second resolved question]
+
+...
+
+
+### Patterns to follow
+
+These show the patterns found in the existing codebase that will be followed to implement the proposed end state architecture.
+
+#### [title First pattern from research]
+
+[summary of the pattern] - e.g. [path/to/file]
+
+```
+[succint code examples from existing codebase demonstrating the pattern]
+```
+
+```
+[succint code examples from proposed end state architecture demonstrating the pattern]
+```
+
+#### [title Second pattern from the research]
+
+...

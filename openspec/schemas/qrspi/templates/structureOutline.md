@@ -1,34 +1,77 @@
-## Context
+---
+date: <!-- ISO date+time with timezone -->
+git_commit: <!-- current commit hash -->
+branch: <!-- current branch name -->
+repository: <!-- repository name -->
+task: <!-- task/change slug -->
+type: structure-outline
+status: draft
+---
 
-<!-- Background and context motivating this implementation approach -->
+# [Plan Title]
 
-## Implementation Approach
+[2-3 sentence plan summary]
 
-<!-- High-level strategy and reasoning for how we'll implement the change -->
+## Desired End State
 
-## Phases
+- [what will be true when this is done]
+- ...
 
-1. **[Phase Name]** — <!-- What this phase accomplishes -->
-2. **[Phase Name]** — <!-- What this phase accomplishes -->
-3. **[Phase Name]** — <!-- What this phase accomplishes -->
+## Implementation Overview
 
-## Goals / Non-Goals
+- [ ] Phase 1: [Phase Title]
+- [ ] Phase 2: [Phase Title]
+- [ ] ...
 
-**Goals:**
-<!-- List goals -->
+---
 
-**Non-Goals:**
-<!-- List non-goals / explicit scope boundaries -->
+## Phase 1: [Phase Title]
 
-## Decisions
+[Overview of what this phase accomplishes]
 
-### 1. [Decision Name]
+### File Changes
 
-Description and rationale.
+- **`path/to/file.ts`**: [what changes in this file]
+- **`path/to/file.ts`**: [what changes in this file]
 
-**Alternatives considered:**
-- Alternative 1: Rejected because...
 
-## Risks / Trade-offs
+[optional - show new method signatures or changes, use ... verbatim in body]
+```typescript
+async function [name]([args]): [returntype] { ... }
+```
 
-<!-- List risks and trade-offs -->
+- **`path/to/file.ts`**: [what changes in this file]
+
+[optional - show new method signatures or changes, use ... verbatim in body]
+```diff
+ async function [name](
+   [arg1],
++  [arg3],
+-  [arg2],
+ ): [returntype] { ... }
+```
+
+### Validation
+
+#### Automated Verification
+
+- [ ] [runnable command, e.g. `bun --bun run typecheck`]
+- [ ] ...
+
+#### Manual Verification
+
+- [ ] [manual test step]
+- [ ] ...
+
+---
+
+## Phase 2: [Phase Title]
+
+...
+
+---
+
+## Open Questions
+
+- [questions about plan structure that need clarification]
+- ...
