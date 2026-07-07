@@ -8,5 +8,8 @@
       "Read(//Users/luiscapuyon/**)"
     ],
     "deny": []
+  },
+  "enabledPlugins": {
+    "understand-anything@understand-anything": true
   }
 }
