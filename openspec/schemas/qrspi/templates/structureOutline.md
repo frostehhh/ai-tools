@@ -3,9 +3,6 @@ date: <!-- ISO date+time with timezone -->
 git_commit: <!-- current commit hash -->
 branch: <!-- current branch name -->
 repository: <!-- repository name -->
-task: <!-- task/change slug -->
-type: structure-outline
-status: draft
 ---
 
 # [Plan Title]
