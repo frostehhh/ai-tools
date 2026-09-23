@@ -1,0 +1,686 @@
+name: trdspi
+version: 1
+description: TRDSPI is Task, Research, Design, Structure Outline, Plan, Implementation — QRSPI without the up-front questions phase
+artifacts:
+  - id: task
+    generates: task.md
+    description: |
+      Prompt the user to provide the task description.
+    instruction: |
+      Prompt the user to provide the task description. Before proceeding to the next step, ask the user
+      if the created artifact is good.
+    template: task.md
+  - id: research
+    generates: research.md
+    description: |
+      Explore the codebase to understand existing code and functionalities. Depends only on task.md —
+      there is no separate questions artifact in this schema, so research decomposes the task description
+      itself into research areas before investigating.
+      NOTE: The artifact aims to describe the current state of the source code, not what should change.
+    instruction: |
+      # Research Codebase
+
+      You are tasked with conducting comprehensive research across the codebase to answer questions about
+      the current state of the system, derived directly from the task description, by spawning parallel
+      sub-agents and synthesizing their findings.
+
+      ## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY.
+      - DO NOT suggest improvements or changes unless the user explicitly asks for them
+      - DO NOT perform root cause analysis unless the user explicitly asks for them
+      - DO NOT propose future enhancements unless the user explicitly asks for them
+      - DO NOT critique the implementation or identify problems
+      - DO NOT recommend refactoring, optimization, or architectural changes
+      - ONLY describe what exists, where it exists, how it works, and how components interact
+      - You are creating a technical map/documentation of the existing system
+
+      ## Steps
+
+      1. **Read task.md fully:**
+        - Use the Read tool WITHOUT limit/offset parameters to read task.md entirely
+        - Read any other directly mentioned files (docs, JSON, etc.) FULLY as well
+        - This ensures you have full context before decomposing the research
+
+      2. **Analyze and decompose the task into research areas:**
+        - Break down the task description into composable research areas
+        - Take time to ultrathink about the underlying patterns, connections, and architectural implications the task might touch
+        - Identify specific components, patterns, or concepts to investigate
+        - Create a research plan that tracks all subtasks
+        - Consider which directories, files, or architectural patterns are relevant
+
+      3. **Spawn parallel sub-agent tasks for comprehensive research:**
+        - Create multiple Task agents to research different aspects concurrently
+        - We now have specialized agents that know how to do specific research tasks:
+
+        **For codebase research:**
+        - Use the **codebase-locator** agent to find WHERE files and components live
+        - Use the **codebase-analyzer** agent to understand HOW specific code works
+        - Use the **codebase-pattern-finder** agent to find examples of existing patterns
+
+        **For web research and researching libraries & dependencies (if applicable):**
+        - Use the **web-search-researcher** agent for external documentation and resources
+        - IF you use web-research agents, instruct them to return LINKS with their findings, and please INCLUDE those links in your final report
+
+        The key is to use these agents intelligently:
+        - **Combine related areas**: Don't necessarily launch one subagent per research area. Group related areas that touch the same part of the codebase into a single subagent prompt.
+        - Aim for 2-6 well-scoped subagents rather than 1:1 area-to-agent mapping - this is not a hard rule, just guidance
+        - Start with locator agents to find what exists
+        - Then use analyzer agents on the most promising findings to document how they work
+        - Run multiple agents in parallel when they're searching for **different areas** of the codebase
+        - Each agent knows its job - just tell it what you're looking for
+        - Don't write detailed prompts about HOW to search - the agents already know
+
+      4. **Wait for all sub-agents to complete and synthesize findings:**
+        - IMPORTANT: Wait for ALL sub-agent tasks to complete before proceeding
+        - Compile all sub-agent results
+        - Prioritize live codebase findings as primary source of truth
+        - Connect findings across different components
+        - Include specific file paths and line numbers for reference
+        - Highlight patterns, connections, and architectural decisions
+        - Answer the task's implicit questions with concrete evidence
+
+      5. **Attempt to answer open questions**
+        - if there are open questions in the doc you write, dispatch subagents to additional targeted research AFTER you write the doc
+        - update the doc with your findings, removing any open questions that now have answers - don't append to the end,
+        - do at most one additional pass to find more information, if your second group of subagents can't find all the answers, leave the remaining questions as open and proceed to the final answer
+
+      6. **Respond to the user according to the template**
+        - Read the final output template:
+        `Read({SKILLBASE}/references/research_final_answer.md)`
+        - Respond following the template exactly
+
+      7. **Handle follow-up questions:**
+        - If the user has follow-up questions for you to investigate
+        - Spawn new sub-agents as needed for additional investigation
+        - Update the existing document in place with your new findings, likely you will update existing sections rather than adding net-new ones to the end
+
+      ## Document Style and Format
+
+      The research document should read as a **story about the codebase** — a technical explainer someone
+      wrote on purpose, told with diagrams, tables, code blocks, pseudocode, and takeaway headers in
+      between. It is **not a list of answers to the task**, and not a file index. A reader
+      should be able to understand how the system works from the document alone — file citations support
+      the narrative, they don't replace it. Human readability is critical, but never at the expense of
+      technical depth and thoroughness.
+
+      ### Headers state the takeaway, not the topic or the question
+
+      Make it read like a document a human wrote for other humans: a reader should be able to skim the
+      headers alone and come away with how the system actually works. Give every section and sub-point a
+      header that asserts its *takeaway* — the way a good slide title states its message ("Sessions
+      persist to Postgres before the daemon acks the write"), not a generic topic label ("Sessions") and
+      **not a research area restated** ("How are sessions persisted?"). Lead with the point, then
+      support it with prose, citations, and visuals.
+
+      - BAD (topic label): `### Session storage`
+      - BAD (question as header): `### How does the daemon persist sessions?`
+      - GOOD (takeaway): `### Sessions persist to Postgres before the daemon acks the write`
+
+      Keep paragraphs short, and place each diagram, signature, table, or snippet immediately beside the
+      prose it illustrates — never let the text become a wall with all the visuals piled at the end.
+
+      ### Writing and citation style
+      - Write each findings section as a **cohesive explanation** of how something works, with file/line
+        citations woven in parenthetically
+      - **Concept-first, not location-first**: describe what something does, then cite where it lives —
+        not the other way around
+      - Bullets are fine for listing fields, flags, or options, but each bullet should describe a concept,
+        not just point at a file
+      - When multiple facts come from adjacent lines in the same file, use a **range** (e.g.
+        `file.ts:45-67`) rather than citing each line individually
+      - Be thorough — include enough citations that a developer can trace every claim back to code
+      - BAD: `- \`src/app.ts:57\` creates WorkosService` / `- \`src/app.ts:58\` creates S3Service` / `- \`src/app.ts:59\` creates JiraService`
+      - GOOD: "Services are module-level singletons created at startup in `src/app.ts:57-80`: WorkosService, S3Service, JiraService, LinearService, StripeService, and two Drizzle database handles."
+
+      ### Visual structure — show the shape of the code, don't just describe it
+
+      Reach for a high-bandwidth visual whenever it conveys structure faster than prose would. Don't rely
+      solely on bullet lists — mix prose, tables, diagrams, and code. Technical depth and thoroughness
+      must not be sacrificed for readability — do both.
+
+      Pick the views that make each part of the story clearest:
+
+      - **Tables** for comparisons, capability matrices, config matrices, and other structured data.
+
+      - **Mermaid diagrams** for object graphs, data flows, sequence/control flow, and architectural
+        relationships between components.
+
+      - **Call-stack tree** for how control actually flows through a service, CLI, worker, or request
+        handler today. Show the important calls, not every frame.
+        ```text
+        handleRequest
+          authenticate(token)
+          SessionService.load(sessionId)
+            sessionStore.fetch(sessionId)
+          SessionService.append(event)
+            eventStore.write(event)
+        ```
+
+      - **File tree** for how responsibility is split across files and directories. Format like `tree`
+        output so depth is easy to scan; annotate what each file is responsible for.
+        ```text
+        src/session
+        ├── session-service.ts   # loads/appends sessions, owns the write path
+        ├── session-store.ts     # Postgres queries behind the service
+        └── session-route.ts     # HTTP handler that calls the service
+        ```
+
+      - **Component tree** for frontend areas — production components, their state/local data, and
+        module/package boundaries (the example below is React/TSX; adapt to whatever UI framework the
+        codebase uses).
+        ```tsx
+        <SessionPage> (apps/example/src/routes/session.tsx)
+          useSessionData()
+          <SessionToolbar>
+            <SessionList> (packages/ui)
+              useVirtualizer()
+        ```
+
+      - **Type signatures, endpoint shapes, and data contracts** for the boundaries between components as
+        they exist — function signatures, routes, message shapes, or the schema behind a store (use the
+        codebase's language).
+        ```text
+        PUT /api/sessions/:id
+          request:  { event: SessionEvent }
+          response: { session: Session }
+        ```
+
+      - **Pseudocode** for complex algorithms or logic — english-y, not a programming language — to show
+        how something currently behaves without reproducing the whole function.
+        ```text
+        on(sessionEvent)
+          load session from store
+          if session.closed
+            reject event
+          else
+            append event and persist
+            return updated session
+        ```
+
+      ### Code References section
+      - Should be **very comprehensive** — a developer should be able to navigate the entire researched
+        area from this list
+      - It is okay to reference **directories** in addition to individual files
+      - **Indicate coverage**: note when the list is exhaustive for a given area vs. when it covers
+        key files but others in the directory may also be relevant
+      - Group related files together
+
+      ### Testing patterns
+      - Document under each findings section how that component is currently tested
+      - Include **test file locations**, testing approach (unit/integration/e2e), mocking patterns,
+        test fixtures and utilities used
+      - If there are no tests, say so explicitly — that's a finding
+
+      <guidance>
+      ## Important notes:
+      - Use parallel Task agents to maximize efficiency and minimize context usage
+      - Focus on finding concrete file paths and line numbers for developer reference
+      - Research documents should be self-contained with all necessary context
+      - Each sub-agent prompt should be specific and focused on read-only documentation operations
+      - Document cross-component connections and how systems interact
+      - Link to GitHub when possible for permanent references
+      - Stay focused on synthesis, not deep file reading
+      - Have sub-agents document examples and usage patterns as they exist
+      - **REMEMBER**: Document and Ask about what IS and WHY, not what SHOULD BE
+      - **NO RECOMMENDATIONS OR IMPLEMENTATION SUGGESTIONS**: Only describe the current state of the codebase
+      - **Testing patterns**: For each component area you research, document how it's currently tested (unit, integration, e2e). Include test file locations and patterns. The research template has a "Testing patterns" section under each component - always fill it in.
+      - **File reading**: Always read task.md and other mentioned files FULLY (no limit/offset) before spawning sub-tasks
+      - **Critical ordering**: Follow the numbered steps exactly
+        - ALWAYS read task.md first before spawning sub-tasks (step 1)
+        - ALWAYS wait for all sub-agents to complete before synthesizing (step 4)
+        - ALWAYS gather metadata before writing the document (step 5 before step 6)
+        - NEVER write the research document with placeholder values
+
+      ## Response
+
+      Remember, you must respond to the user according to the output template at `{SKILLBASE}/references/research_final_answer.md`
+
+      <important if="there are open questions in the research document">
+
+      If there are open questions after writing the document (and optionally, after your second pass to find answers):
+
+      You should include the following text after the section in the final answer template that says 'If you'd like, you can review the research document for completeness.':
+
+      ```
+      There are N open questions that you should review, you can
+      - ask me to go find the answers for them
+      - provide the answers yourself
+      - tell me they are irrelevant and I'll remove them
+      ```
+      </important>
+
+      ## Markdown Formatting
+
+      When writing markdown files that contain code blocks showing other markdown (like README examples or SKILL.md templates), use 4 backticks (````) for the outer fence so inner 3-backtick code blocks don't prematurely close it:
+
+      ````markdown
+      # Example README
+      ## Installation
+      ```bash
+      npm install example
+      ```
+      ````
+      </guidance>
+
+      After artifact creation, ask the user if the created artifact is good, and instruct the user to create a new context window. Provide a prompt that can
+      be used to initiate the design artifact for the current spec. Use the following template:
+      "Continue the [feature] OpenSpec change by proceeding to the design artifact"
+    template: research.md
+    requires:
+      - task
+  - id: design
+    generates: design.md
+    description: |
+      High-level description of the change — motivation, current state, desired end state, and scope boundaries.
+      Depends on research.
+    instruction: |
+      Synthesize research findings into a clear design document.
+      Depends on task.md and research.md — derive all sections from what was discovered.
+
+      # Design Discussion Phase
+
+      You are now in the Design Discussion phase. Based on the research findings and the user's change request, work with them to make design decisions.
+
+      ## Steps
+
+      1. **Read the files in the task artifact directory and any mentioned files immediately and FULLY**:
+        - Research documents
+        - **IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters to read entire files, never read files partially - if a file is mentioned, read it completely
+        - do not spawn sub-tasks before reading these files yourself in the main context
+
+      2. **Check for related task content**:
+        - read all relevant files in the task directory to fully understand the work so far
+
+      3. **Optional - Spawn parallel sub-tasks for comprehensive research**:
+        - If not clear from the research, spawn sub-tasks to research different aspects concurrently
+        - Create multiple Agent() calls to research different aspects concurrently
+        - Use the right agent for each type of research:
+
+        **For deeper investigation:**
+        - **codebase-locator** - To find more specific files (e.g., "find all files that handle [specific component]")
+        - **codebase-analyzer** - To understand implementation details (e.g., "analyze how [system] works")
+        - **codebase-pattern-finder** - To find similar implementation patterns we can model after
+
+        Each agent knows how to:
+        - Find the right files and code patterns
+        - Identify conventions and patterns to follow
+        - Look for integration points and dependencies
+        - Return specific file:line references
+        - Find tests and examples
+
+      <important if="the user asks you to find how things work or add detail about existing functionality">
+        prefer to use an initial pass with one or more Agent() calls before reading files yourself
+        <else if="the user gives straightforward feedback that doesn't require loading more codebase context">
+            skip Agent() calls if you already have the context
+        </else>
+      </important>
+
+      4. **Read the design discussion Template**
+
+      `Read({SKILLBASE}/references/design_discussion_template.md)`
+
+      <content_guidance>
+      **Outline High-level product spec** - Current state, desired end state, what we're not doing in terms of user experience or functionality
+
+      **Outline the proposed end state architecture** - Before and after diagrams, concise outline, description, psuedocode, etc
+
+      **Discuss design decisions**
+        - For each major design choice, present options with pros/cons
+        - Make recommendations based on codebase conventions
+        - If the research surfaced testing patterns for the components being changed, include a brief testing approach (e.g. "follow the existing unit test pattern in `__tests__/foo.test.ts`")
+
+      **IMPORTANT: All design questions must be written in the OPEN state**
+        - Put ALL questions under "Design Questions", NOT under "Resolved Design Questions"
+        - You may recommend an option, but you must NOT resolve or close a question yourself
+        - Only the user can resolve a design question — through explicit feedback or approval
+        - The "Resolved Design Questions" section should be empty in the initial document
+        - Do NOT auto-resolve questions even if the answer seems obvious from the research
+
+      **Resolving questions after user feedback**
+        - When the user provides a clear answer (e.g. "for X we should do Y"), move the question to "Resolved Design Questions"
+        - They don't need to say "resolve" explicitly — any clear indication of a decision counts
+        - Record the final decision with rationale
+        - Record the options that were considered but not chosen, with brief rationale for why they were discarded
+
+      **Present patterns to follow**
+        - Identify existing patterns in the codebase that should be followed
+        - Include file locations and multiline code snippets showing the pattern
+
+      </content_guidance>
+
+      6. **Read the final output template**
+
+      `Read({SKILLBASE}/references/design_discussion_final_answer.md)`
+
+      If hook context says all design questions have been resolved, read the resolved template instead:
+
+      `Read({SKILLBASE}/references/design_discussion_final_answer_resolved.md)`
+
+      7. Respond following the selected template exactly. Do not include a summary or other information. Include cloud permalinks if available.
+
+      <guidance>
+
+      ## Markdown Formatting
+
+      When writing markdown files that contain code blocks showing other markdown (like README examples or SKILL.md templates), use 4 backticks (````) for the outer fence so inner 3-backtick code blocks don't prematurely close it:
+
+      ````markdown
+      # Example README
+      ## Installation
+      ```bash
+      npm install example
+      ```
+      ````
+
+      ## Document Precedence
+
+      When documents conflict, the most recent document wins:
+      **design discussion > research > task**
+
+      Decisions made during the design discussion supersede the original task description.
+      The task provides the initial request; the design discussion refines and finalizes the approach.
+      </guidance>
+
+
+      Before proceeding to the next step, ask the user if the created artifact is good.
+    template: design.md
+    requires:
+      - task
+      - research
+  - id: structureOutline
+    generates: structureOutline.md
+    description: |
+      Technical design decisions and implementation approach.
+      Depends on research, and design.
+
+      Things you can ask the agent for
+      - Reorder phases for better vertical slicing - instead of individual layers per phase (DB -> API -> frontend), wire multiple systems together in a way that can be run/tested in a single phase, then refine business logic later
+      - Add code snippets to implementation or validation steps
+      - Ask the agent to go find answers for parts that are ambiguous
+    instruction: |
+      # Create Structure Outline
+
+      You are creating a phased implementation plan based on research findings and design decisions.
+
+      ## Steps
+
+      1. **Read all input documents FULLY**:
+         - Use Read tool WITHOUT limit/offset to read the research document
+         - Understand the current state of the codebase from research findings
+         - Review all design decisions and patterns to follow
+
+      2. **Check for related task content**:
+         - Read all relevant files (task.md, research.md, design.md)
+         - Read relevant files mentioned in those documents
+
+      3. **Spawn sub-agents for follow-up research if necessary**:
+
+         **For deeper investigation:**
+         - **codebase-locator**: Find additional files if needed
+         - **codebase-analyzer**: Deep-dive on specific implementations
+         - **codebase-pattern-finder**: Find more examples of patterns
+         - **web-search-researcher**: Research external best practices
+
+         Do not run agents in the background - FOREGROUND AGENTS ONLY.
+
+      4. **Create a phased implementation plan**:
+         - Break the work into logical phases
+         - Each phase should be independently testable
+         - Order phases vertically rather than horizontally - wire everything together in a testable way and then add functionality incrementally
+
+      Each phase should ideally be a thin vertical slice that touches all / as many layers as possible for the desired end state. Avoid horizontal phases like 'add all types', 'add API endpoints', 'implement UI'.
+
+      Try to find ways to structure the outline so that each phase cuts across multiple layers, services, or module boundaries at least > 1 if at all possible. Each phase should be independently verifiable based on typechecks, tests, build steps, and any other in-repo verification. Ensure you understand codebase patterns for testing and verification, and don't suggest manual testing for a step that could be automated w/ a script, an existing skill, etc.
+
+      A horizontal breakdown looks like this:
+
+      1. Build the schema
+      2. Build the API
+      3. Build the UI
+      4. Add tests
+
+      That creates handoff problems and partially finished work.
+
+      A vertical slice cuts through the stack:
+
+      1. User can create the simplest version of the thing end-to-end
+      2. User can edit one field end-to-end
+      3. User can see the first validation error end-to-end
+
+      Each issue should include schema, API, UI, and tests if the slice needs them.
+
+      These are intended to be **illustrative**. Not all work lends itself to this type of structure specifically, but you should try to cross module boundaries where able to surface surprises early. Do not structure a phase N such that Phase N+1 must be completed before Phase N can be verified.
+
+      5. **For each phase, specify**:
+         - Overview of what's being built
+         - Specific file changes with descriptions
+         - Test file changes if the research found testing patterns for the components being modified (e.g. "add test in `__tests__/foo.test.ts` covering the new behavior")
+         - Validation approach - how we'll verify the phase works
+
+      6. **Create the Implementation Overview section**:
+         - Add a checkbox list of all phase titles at the top
+         - Format: `- [ ] Phase N: [Title]`
+         - These get checked off as phases complete during implementation
+
+      ## Output Document
+
+      1. **Read the structure outline template**
+
+      `Read({SKILLBASE}/references/structure_outline_template.md)`
+
+      2. **Read the final output template**
+
+      `Read({SKILLBASE}/references/structure_outline_final_answer.md)`
+
+      3. Respond following the template exactly. Do not include a summary or other information. Include cloud permalinks if available.
+
+      ## Work with the user to iterate on the design
+
+      3. **If the user gives any input along the way**:
+         - DO NOT just accept the correction
+         - Spawn new research tasks to verify the correct information
+         - Read the specific files/directories they mention
+         - Only proceed once you've verified the facts yourself
+         - interpret ALL user feedback as instructions to update the document, not to begin implementation
+         - Update the structure according to the user's feedback
+
+      <guidance>
+      ## Markdown Formatting
+
+      When writing markdown files that contain code blocks showing other markdown (like README examples or SKILL.md templates), use 4 backticks (````) for the outer fence so inner 3-backtick code blocks don't prematurely close it:
+
+      ````markdown
+      # Example README
+      ## Installation
+      ```bash
+      npm install example
+      ```
+      ````
+
+      ## Phase changes should be concise but clear
+
+      The goal of this document is to be concise and human readable.
+      Be tasteful and thoughtful about how and where you include code snippets, and prefer highlighting signature changes rather than entire code blocks, unless the user explicitly asks for them. The structure outline is our "c header files", the plan will include the function definitions.
+
+      ## Phase Validation Design
+
+      Each phase has a `### Validation` section with two subsections:
+      - `#### Automated Verification`: runnable commands (typecheck, tests, lint)
+      - `#### Manual Verification`: steps requiring human judgment
+
+      Not every phase requires manual validation — don't add manual steps just to have them.
+      If a phase cannot be manually checked, it may be too small or not vertical enough.
+      The goal is to catch issues early, not at the end of a 1000+ line change.
+
+      Automated testing is always better than manual testing.
+
+      ## Document Precedence
+
+      When documents conflict, the most recent document wins:
+      **structure outline > design discussion > research > task**
+
+      The structure outline captures the final phased approach. If the task or research
+      suggested something different, the structure outline reflects the latest decisions.
+      </guidance>
+
+      Before proceeding to the next step, ask the user if the created artifact is good.
+    template: structureOutline.md
+    requires:
+      - task
+      - research
+      - design
+  - id: plan
+    generates: plan.md
+    description: |
+      Implementation checklist with trackable tasks organized into phases.
+      Depends on research, design, and structureOutline.
+    instruction: |
+      # Create Plan
+
+      You are in the final Plan Writing phase. Convert the structure outline into a complete, detailed implementation plan.
+
+      ## Steps
+
+      1. **Read all input files FULLY**:
+         - Use Read tool WITHOUT limit/offset to read all provided file paths
+         - Read everything relevant (task.md, research.md, design.md, structureOutline.md) to build full context
+
+      2. **Read relevant code files**:
+         - Read any source files mentioned in the research, design, or structure documents
+         - Build context for writing specific code examples
+
+      3. **Read the plan template**:
+
+      `Read({SKILLBASE}/references/plan_template.md)`
+
+      4. **Write the implementation plan**:
+         - Convert each phase from the structure outline into detailed implementation steps
+         - Include specific code examples for each change
+         - Add both automated and manual success criteria
+
+      ## Plan Writing Guidelines
+
+      - Each phase should be independently testable
+      - Include specific code examples, not just descriptions
+      - Automated verification should be runnable commands
+      - Manual verification should be specific, actionable steps
+      - Pause for human confirmation between phases
+      - If the research documented testing patterns for the components being changed, include test code in the plan (new test files or additions to existing test files). Follow the existing test patterns found in the research.
+
+      ## Document Precedence
+
+      When documents conflict, the most recent document wins:
+      **plan > structure outline > design discussion > research > task**
+
+      The plan is the final authority. Follow the structure outline and design decisions over
+      the original task description when they differ.
+
+      ## Output
+
+      Before proceeding to the next step, ask the user if the created artifact is good.
+
+      <guidance>
+      ## Markdown Formatting
+
+      When writing markdown files that contain code blocks showing other markdown (like README examples or SKILL.md templates), use 4 backticks (````) for the outer fence so inner 3-backtick code blocks don't prematurely close it:
+
+      ````markdown
+      # Example README
+      ## Installation
+      ```bash
+      npm install example
+      ```
+      ````
+
+      ## Validation Design
+
+      Not every phase requires manual validation, don't put steps for manual validation just to have them.
+      </guidance>
+    template: plan.md
+    requires:
+      - task
+      - research
+      - design
+      - structureOutline
+apply:
+  requires:
+    - plan
+  tracks: plan.md
+  instruction: |
+    You are tasked with implementing an approved technical plan. These plans contain phases with specific changes and success criteria.
+
+    ## Getting Started
+
+    When given a plan path:
+    - Read the plan completely and check for any existing checkmarks (- [x])
+    - Read the original task and all files mentioned in the plan
+    - **Read files fully** - never use limit/offset parameters, you need complete context
+    - Think deeply about how the pieces fit together
+    - Create a todo list to track your progress
+    - Start implementing if you understand what needs to be done
+
+    If no plan path provided, ask for one.
+
+    ## Implementation Philosophy
+
+    Plans are carefully designed, but reality can be messy. Your job is to:
+    - Follow the plan's intent while adapting to what you find
+    - Implement each phase fully before moving to the next
+    - Verify your work makes sense in the broader codebase context
+    - Update checkboxes in the plan as you complete sections
+
+    When things don't match the plan exactly, think about why and communicate clearly. The plan is your guide, but your judgment matters too.
+
+    If you encounter a mismatch:
+    - STOP and think deeply about why the plan can't be followed
+    - Present the issue clearly:
+      ```
+      Issue in Phase [N]:
+      Expected: [what the plan says]
+      Found: [actual situation]
+      Why this matters: [explanation]
+
+      How should I proceed?
+      ```
+
+    ## Verification Approach
+
+    After implementing a phase:
+    - Run the success criteria checks
+    - Fix any issues before proceeding
+    - Update your progress in both the plan and your todos
+    - Check off completed items in the plan file itself using Edit
+    - **Pause for human verification**: After completing all automated verification for a phase, pause and inform the human that the phase is ready for manual testing. Use this format:
+      ```
+      Phase [N] Complete - Ready for Manual Verification
+
+      Automated verification passed:
+      - [List automated checks that passed]
+
+      Please perform the manual verification steps listed in the plan:
+      - [List manual verification items from the plan]
+
+      Let me know when manual testing is complete so I can proceed to Phase [N+1].
+      ```
+
+    If instructed to execute multiple phases consecutively, skip the pause until the last phase. Otherwise, assume you are just doing one phase.
+
+    Do not check off items in the manual testing steps until confirmed by the user.
+
+
+    ## If You Get Stuck
+
+    When something isn't working as expected:
+    - First, make sure you've read and understood all the relevant code
+    - Consider if the codebase has evolved since the plan was written
+    - Present the mismatch clearly and ask for guidance
+
+    Use sub-tasks sparingly - mainly for targeted debugging or exploring unfamiliar territory.
+
+    ## Resuming Work
+
+    If the plan has existing checkmarks:
+    - Trust that completed work is done
+    - Pick up from the first unchecked item
+    - Verify previous work only if something seems off
+
+    Remember: You're implementing a solution, not just checking boxes. Keep the end goal in mind and maintain forward momentum.
