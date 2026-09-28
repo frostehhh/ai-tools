@@ -13,6 +13,14 @@ context: |
 
   If you need to show a diagram, ALWAYS use MermaidJS.
 
+  ## Additional Spec Docs
+
+  For any additional .md files the user asks for (not an artifact's own generated output):
+  - Store them in the change directory's `docs/<artifact_name>/` subdirectory.
+  - Reference each in the current artifact doc's `## Additional Spec Docs` section, as a
+    markdown table with columns `Path` and `Description`. Add a row when a new file is
+    stored; create the section if it doesn't exist yet.
+
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
