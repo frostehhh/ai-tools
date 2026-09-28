@@ -242,6 +242,7 @@ apply:
     - Think deeply about how the pieces fit together
     - Create a todo list to track your progress
     - Start implementing if you understand what needs to be done
+    - After implementing each phase, commit the changes.
 
     If no plan path provided, ask for one.
 
