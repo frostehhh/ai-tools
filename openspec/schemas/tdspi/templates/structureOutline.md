@@ -13,6 +13,7 @@ repository: <!-- repository name -->
 
 - [what will be true when this is done]
 - ...
+[if items span multiple unrelated components/areas, group them under #### subheadings instead of one flat list]
 
 ## Implementation Overview
 

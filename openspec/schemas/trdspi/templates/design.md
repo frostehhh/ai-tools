@@ -14,12 +14,14 @@ repository: <!-- repository name -->
 - [what the user sees or experiences today — product behavior, UX gaps, user pain points — no file paths or function names]
 - ..
 - ..
+[if items span multiple unrelated components/areas, group them under #### subheadings instead of one flat list]
 
 ### Desired End State
 
 - [what will be true when this work is done]
 - [user story, problems that will be solved, new things a user can do]
 - ..
+[if items span multiple unrelated components/areas, group them under #### subheadings instead of one flat list]
 
 ### What we're not doing
 

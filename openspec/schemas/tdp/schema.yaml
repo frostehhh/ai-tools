@@ -56,6 +56,7 @@ artifacts:
 
       <content_guidance>
       **Outline High-level product spec** - Current state, desired end state, what we're not doing in terms of user experience or functionality
+        - If Current State or Desired End State items span multiple unrelated components/areas, group them under subheadings for reviewer comprehension. Skip grouping for short, single-topic lists.
 
       **Outline the proposed end state architecture** - Before and after diagrams, concise outline, description, psuedocode, etc
 
