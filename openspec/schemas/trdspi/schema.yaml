@@ -85,7 +85,7 @@ artifacts:
 
       6. **Respond to the user according to the template**
         - Read the final output template:
-        `Read({SKILLBASE}/references/research_final_answer.md)`
+        `Read(openspec/schemas/trdspi/docs/research_final_answer.md)`
         - Respond following the template exactly
 
       7. **Handle follow-up questions:**
@@ -232,7 +232,7 @@ artifacts:
 
       ## Response
 
-      Remember, you must respond to the user according to the output template at `{SKILLBASE}/references/research_final_answer.md`
+      Remember, you must respond to the user according to the output template at `openspec/schemas/trdspi/docs/research_final_answer.md`
 
       <important if="there are open questions in the research document">
 
@@ -314,10 +314,6 @@ artifacts:
         </else>
       </important>
 
-      4. **Read the design discussion Template**
-
-      `Read({SKILLBASE}/references/design_discussion_template.md)`
-
       <content_guidance>
       **Outline High-level product spec** - Current state, desired end state, what we're not doing in terms of user experience or functionality
 
@@ -347,15 +343,15 @@ artifacts:
 
       </content_guidance>
 
-      6. **Read the final output template**
+      4. **Read the final output template**
 
-      `Read({SKILLBASE}/references/design_discussion_final_answer.md)`
+      `Read(openspec/schemas/trdspi/docs/design_discussion_final_answer.md)`
 
       If hook context says all design questions have been resolved, read the resolved template instead:
 
-      `Read({SKILLBASE}/references/design_discussion_final_answer_resolved.md)`
+      `Read(openspec/schemas/trdspi/docs/design_discussion_final_answer_resolved.md)`
 
-      7. Respond following the selected template exactly. Do not include a summary or other information. Include cloud permalinks if available.
+      5. Respond following the selected template exactly. Do not include a summary or other information.
 
       <guidance>
 
@@ -463,15 +459,11 @@ artifacts:
 
       ## Output Document
 
-      1. **Read the structure outline template**
+      1. **Read the final output template**
 
-      `Read({SKILLBASE}/references/structure_outline_template.md)`
+      `Read(openspec/schemas/trdspi/docs/structure_outline_final_answer.md)`
 
-      2. **Read the final output template**
-
-      `Read({SKILLBASE}/references/structure_outline_final_answer.md)`
-
-      3. Respond following the template exactly. Do not include a summary or other information. Include cloud permalinks if available.
+      2. Respond following the template exactly. Do not include a summary or other information.
 
       ## Work with the user to iterate on the design
 
@@ -548,11 +540,7 @@ artifacts:
          - Read any source files mentioned in the research, design, or structure documents
          - Build context for writing specific code examples
 
-      3. **Read the plan template**:
-
-      `Read({SKILLBASE}/references/plan_template.md)`
-
-      4. **Write the implementation plan**:
+      3. **Write the implementation plan**:
          - Convert each phase from the structure outline into detailed implementation steps
          - Include specific code examples for each change
          - Add both automated and manual success criteria

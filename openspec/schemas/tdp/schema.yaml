@@ -54,10 +54,6 @@ artifacts:
         </else>
       </important>
 
-      5. **Read the design discussion Template**
-
-      `Read({SKILLBASE}/references/design_discussion_template.md)`
-
       <content_guidance>
       **Outline High-level product spec** - Current state, desired end state, what we're not doing in terms of user experience or functionality
 
@@ -88,15 +84,15 @@ artifacts:
 
       </content_guidance>
 
-      6. **Read the final output template**
+      4. **Read the final output template**
 
-      `Read({SKILLBASE}/references/design_discussion_final_answer.md)`
+      `Read(openspec/schemas/tdp/docs/design_discussion_final_answer.md)`
 
       If hook context says all design questions have been resolved, read the resolved template instead:
 
-      `Read({SKILLBASE}/references/design_discussion_final_answer_resolved.md)`
+      `Read(openspec/schemas/tdp/docs/design_discussion_final_answer_resolved.md)`
 
-      7. Respond following the selected template exactly. Do not include a summary or other information. Include cloud permalinks if available.
+      5. Respond following the selected template exactly. Do not include a summary or other information.
 
       <guidance>
 
@@ -187,11 +183,7 @@ artifacts:
 
       These are intended to be **illustrative**. Not all work lends itself to this type of structure specifically, but you should try to cross module boundaries where able to surface surprises early. Do not structure a phase N such that Phase N+1 must be completed before Phase N can be verified.
 
-      5. **Read the plan template**:
-
-      `Read({SKILLBASE}/references/plan_template.md)`
-
-      6. **Write the implementation plan (absorbed detailed-conversion step)**:
+      5. **Write the implementation plan (absorbed detailed-conversion step)**:
          - Add a checkbox list of all phase titles at the top (Implementation Overview), format `- [ ] Phase N: [Title]`
          - For each phase: overview, specific file changes with descriptions and code examples (not just descriptions), and success criteria split into Automated Verification (runnable commands) and Manual Verification (specific, actionable steps)
          - If design.md documented testing patterns for the components being changed, include test code in the plan (new test files or additions to existing test files), following those patterns
