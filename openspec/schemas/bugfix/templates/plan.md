@@ -14,8 +14,6 @@
 
 ### Changes Required
 
-#### 1. <!-- Task Group Name -->
-
 - [ ] 1 <!-- Task Group Name -->
   - [ ] 1.1 <!-- Task description -->
     **File/s**: `path/to/file.ext`

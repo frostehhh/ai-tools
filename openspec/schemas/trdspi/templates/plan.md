@@ -41,7 +41,7 @@ repository: <!-- repository name -->
 
 ### Changes Required:
 
-#### 1.1 [Component/File Group]
+- [ ] 1.1 [Component/File Group]
 
 **File**: `path/to/file.ext`
 **Changes**: [Summary of changes] - [around line X | add after Y | etc etc]
@@ -62,7 +62,7 @@ export interface [name]{
 ```
 
 
-#### 1.2 [Another Component/File Group]
+- [ ] 1.2 [Another Component/File Group]
 
 **File**: `path/to/file.ext`
 **Changes**: [Summary of changes]
@@ -95,7 +95,7 @@ export interface [name]{
 
 ### Changes Required:
 
-#### 2.1 [Component/File Group]
+- [ ] 2.1 [Component/File Group]
 
 **File**: `path/to/file.ext`
 **Changes**: [Summary of changes]
