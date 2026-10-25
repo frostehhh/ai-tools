@@ -1,0 +1,9 @@
+{
+  "default": "general",
+  "prefixes": {},
+  "categories": {
+    "frontend": [
+      "angular-developer"
+    ]
+  }
+}

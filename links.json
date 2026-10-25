@@ -1,0 +1,9 @@
+{
+  "$comment": "Link mapping from ai-tools to every consumer. 'link' is the path that must exist; 'target' is what it points at. type: symlink (dir/file symlink, needs admin or dev mode) | junction (dirs only). mode: 'link' = single link; 'perFile' = one link per file in 'target' dir matching 'include' (minus 'exclude'). ${var} expands from 'vars'. Generated skill junctions inside src are owned by tools/linkSkills/sync.ps1, not listed here.",
+  "vars": {
+    "repo": "C:\\dev\\Git\\ai-tools",
+    "src": "${repo}\\src",
+    "home": "C:\\Users\\luisc47"
+  },
+  "groups": {}
+}
