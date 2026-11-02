@@ -1,13 +1,16 @@
 id = "local.langfuse"
 name = "Langfuse"
 version = "0.1.0"
-min_herdr_version = "0.9.5"
-description = "Launch local Langfuse via the mise langfuse task (docker compose up -d) and show a Windows notification when up"
-platforms = ["windows"]
+min_herdr_version = "0.9.3"
+description = "Launch local Langfuse via docker compose (detached). Set LANGFUSE_DIR globally to point to your langfuse checkout."
+platforms = ["windows", "macos"]
 
 # Start Langfuse automatically when the Herdr server starts, then notify.
 [[startup]]
 command = ["pwsh", "-NoProfile", "-File", "start.ps1"]
+
+[[startup]]
+command = ["bash", "start.sh"]
 
 # Also expose it as a manual action.
 [[actions]]
@@ -15,3 +18,9 @@ id = "start"
 title = "Start Langfuse"
 contexts = ["workspace"]
 command = ["pwsh", "-NoProfile", "-File", "start.ps1"]
+
+[[actions]]
+id = "start-macos"
+title = "Start Langfuse (macOS)"
+contexts = ["workspace"]
+command = ["bash", "start.sh"]

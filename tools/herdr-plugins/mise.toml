@@ -1,4 +1,4 @@
 [tasks.langfuse]
-description = "Launch Langfuse via docker compose (detached) from the local langfuse directory"
-dir = "C:/dev/Git/langfuse"
+description = "Launch Langfuse via docker compose (detached)"
+dir = "{{ env.LANGFUSE_DIR }}"
 run = "docker compose up -d"
