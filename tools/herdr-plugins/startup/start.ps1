@@ -13,13 +13,13 @@ if (-not $env:LANGFUSE_DIR) {
 $pluginDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $pluginDir
 
-mise run langfuse
+mise run startup
 $code = $LASTEXITCODE
 
 if ($code -eq 0) {
-    & $herdr notification show 'Langfuse is up' --body 'Web UI: http://localhost:3000' --sound done | Out-Null
+    & $herdr notification show 'Background services are up' --body 'Langfuse: http://localhost:3000' --sound done | Out-Null
 } else {
-    & $herdr notification show 'Langfuse failed to start' --body "mise run langfuse exited with code $code" --sound request | Out-Null
+    & $herdr notification show 'Background services failed to start' --body "mise run startup exited with code $code" --sound request | Out-Null
 }
 
 exit $code

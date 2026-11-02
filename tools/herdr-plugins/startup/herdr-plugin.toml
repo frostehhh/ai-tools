@@ -1,11 +1,11 @@
-id = "local.langfuse"
-name = "Langfuse"
+id = "local.startup"
+name = "Startup"
 version = "0.1.0"
 min_herdr_version = "0.9.3"
-description = "Launch local Langfuse via docker compose (detached). Set LANGFUSE_DIR globally to point to your langfuse checkout."
+description = "Start all background services (Langfuse, etc.) via mise tasks. Set LANGFUSE_DIR globally to point to your langfuse checkout."
 platforms = ["windows", "macos"]
 
-# Start Langfuse automatically when the Herdr server starts, then notify.
+# Start all services automatically when the Herdr server starts, then notify.
 [[startup]]
 command = ["pwsh", "-NoProfile", "-File", "start.ps1"]
 
@@ -15,12 +15,12 @@ command = ["bash", "start.sh"]
 # Also expose it as a manual action.
 [[actions]]
 id = "start"
-title = "Start Langfuse"
+title = "Start Background Services"
 contexts = ["workspace"]
 command = ["pwsh", "-NoProfile", "-File", "start.ps1"]
 
 [[actions]]
 id = "start-macos"
-title = "Start Langfuse (macOS)"
+title = "Start Background Services (macOS)"
 contexts = ["workspace"]
 command = ["bash", "start.sh"]

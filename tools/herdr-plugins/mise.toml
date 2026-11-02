@@ -1,4 +1,14 @@
+[tasks.docker-desktop]
+description = "Ensure Docker Desktop is running"
+run = "docker desktop start"
+
 [tasks.langfuse]
 description = "Launch Langfuse via docker compose (detached)"
+depends = ["docker-desktop"]
 dir = "{{ env.LANGFUSE_DIR }}"
 run = "docker compose up -d"
+
+[tasks.startup]
+description = "Start all background services"
+depends = ["langfuse"]
+run = "echo 'Background services started'"

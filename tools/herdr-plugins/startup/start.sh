@@ -12,13 +12,13 @@ fi
 plugin_dir="$(cd "$(dirname "$0")" && pwd)"
 cd "$plugin_dir"
 
-mise run langfuse
+mise run startup
 code=$?
 
 if [ "$code" -eq 0 ]; then
-    "$herdr_bin" notification show 'Langfuse is up' --body 'Web UI: http://localhost:3000' --sound done >/dev/null 2>&1 || true
+    "$herdr_bin" notification show 'Background services are up' --body 'Langfuse: http://localhost:3000' --sound done >/dev/null 2>&1 || true
 else
-    "$herdr_bin" notification show 'Langfuse failed to start' --body "mise run langfuse exited with code $code" --sound request >/dev/null 2>&1 || true
+    "$herdr_bin" notification show 'Background services failed to start' --body "mise run startup exited with code $code" --sound request >/dev/null 2>&1 || true
 fi
 
 exit "$code"
