@@ -1,31 +1,31 @@
 ---
 name: sync-links
-description: Create, repair and audit every link from this repo to its consumers from links.json, via tools/syncLinks/sync.ps1. Use after adding, moving or removing a link, after a fresh clone or machine setup, when a consumer can't see src config, or when the user asks to audit or fix links.
+description: Create, repair and audit every link from this repo to its consumers from links.json, via tools/syncLinks/sync.py. Use after adding, moving or removing a link, after a fresh clone or machine setup, when a consumer can't see src config, or when the user asks to audit or fix links.
 ---
 
 # sync-links
 
-`links.json` (repo root) is the single map of every link to a consumer. `tools/syncLinks/sync.ps1` makes the filesystem match it. Never run `mklink` by hand. Full details: `tools/syncLinks/README.md`.
+`links.json` (repo root) is the single map of every link to a consumer. `tools/syncLinks/sync.py` makes the filesystem match it. Never run `mklink` by hand. Full details: `tools/syncLinks/README.md`.
 
 ## Run
 
 From the repo root:
 
 ```
-pwsh tools/syncLinks/sync.ps1                 # create missing / fix wrong links
-pwsh tools/syncLinks/sync.ps1 -Check          # audit only, exit 1 if anything is off
-pwsh tools/syncLinks/sync.ps1 -Group <name>   # one or more groups from links.json
-pwsh tools/syncLinks/sync.ps1 -WhatIf         # preview
-pwsh tools/syncLinks/sync.ps1 -Config <path>  # another links file
+python tools/syncLinks/sync.py                 # create missing / fix wrong links
+python tools/syncLinks/sync.py --check          # audit only, exit 1 if anything is off
+python tools/syncLinks/sync.py --group <name>   # one or more groups from links.json
+python tools/syncLinks/sync.py --dry-run        # preview
+python tools/syncLinks/sync.py --config <path>  # another links file
 ```
 
-Prefer `-Check` or `-WhatIf` first when unsure. Restart opencode after changes.
+Prefer `--check` or `--dry-run` first when unsure. Restart opencode after changes.
 
 ## Workflow: add, move or remove a link
 
 1. Edit `links.json` (`vars`, then the group's `links`).
-2. `pwsh tools/syncLinks/sync.ps1 -WhatIf -Group <group>`.
-3. Run without `-WhatIf`, then `-Check`.
+2. `python tools/syncLinks/sync.py --dry-run --group <group>`.
+3. Run without `--dry-run`, then `--check`.
 
 ## Per-link behaviour
 
@@ -38,8 +38,8 @@ Prefer `-Check` or `-WhatIf` first when unsure. Restart opencode after changes.
 
 ## Rules
 
-- `type`: `symlink` (needs elevated shell or Developer Mode) or `junction` (directories only, no admin).
+- `type`: `symlink` (needs elevated shell or Developer Mode on Windows) or `junction` (directories only, no admin).
 - `mode: "perFile"` links each matching item into a real folder.
 - Skill junctions inside `src` belong to `link-skills`, not this skill.
-- Never `-Recurse` delete a link; use `cmd /c rmdir <link>`.
-- Windows only, needs `pwsh`.
+- Never recursively delete a link; use `rm <link>` (Unix) or `rmdir <link>` (Windows).
+- Cross-platform: works on macOS, Linux, and Windows.

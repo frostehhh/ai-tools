@@ -10,14 +10,14 @@ Shareable AI config (skills, Claude Code and opencode config, OpenSpec) under `s
 
 - Edit skills only in `src/.agents/skills/<name>`. `src/skills/<category>/` are generated junctions (gitignored). Never put real content there.
 - `src/.claude/skills/<name>` are pointer files (git symlinks) into `src/.agents/skills`; don't replace them with real folders.
-- After adding, removing or renaming a skill, or after a fresh clone, run `pwsh tools/linkSkills/sync.ps1`.
+- After adding, removing or renaming a skill, or after a fresh clone, run `python tools/linkSkills/sync.py`.
 - Skill category comes from `tools/linkSkills/categories.json` (explicit lists, then prefixes, default `general`). Skill names must not change.
-- Any link added, moved or removed: update `links.json`, then run `pwsh tools/syncLinks/sync.ps1` (`-Check` to audit). Do not run `mklink` by hand.
+- Any link added, moved or removed: update `links.json`, then run `python tools/syncLinks/sync.py --check` to audit. Do not run `mklink` by hand.
 
 ## Git and filesystem safety
 
 - Do not run `git checkout` / `git switch` / `git stash` / `git clean` / `git reset --hard` with generated junctions present. Git follows them badly on Windows and can delete files through them.
-- Delete a junction or symlink with `cmd /c rmdir <link>` or `Remove-Item` without `-Recurse`. Never `-Recurse` on a link: it can delete the target's contents.
+- Delete a junction or symlink with `rm <link>` (Unix) or `rmdir <link>` (Windows). Never recursively delete a link: it can delete the target's contents.
 - Symlinks need admin or developer mode. Junctions (directories only) do not.
 
 ## Tools
