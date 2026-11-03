@@ -12,6 +12,7 @@ Shareable AI config (skills, Claude Code and opencode config, OpenSpec) under `s
 - `src/.claude/skills/<name>` are pointer files (git symlinks) into `src/.agents/skills`; don't replace them with real folders.
 - After adding, removing or renaming a skill, or after a fresh clone, run `python tools/linkSkills/sync.py`.
 - Skill category comes from `tools/linkSkills/categories.json` (explicit lists, then prefixes, default `general`). Skill names must not change.
+- `openspec/config.yaml` and `openspec/schemas/` are manual copies of `src/openspec/`. `src/openspec/` is the source of truth. Edit there first, then copy the change to `openspec/` by hand (e.g. `cp -R`). Never copy `openspec/changes/` or `openspec/specs/` back to `src/`. Not linked, so `syncLinks` won't detect drift.
 - Any link added, moved or removed: update `links.json`, then run `python tools/syncLinks/sync.py --check` to audit. Do not run `mklink` by hand.
 
 ## Git and filesystem safety
