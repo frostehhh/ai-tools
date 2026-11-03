@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipedream Connect — Notion → Google Calendar</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; color: #111; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    p { margin-top: 0; color: #555; }
+    button { padding: 14px; margin: 8px 0; font-size: 16px; cursor: pointer; width: 100%; border-radius: 8px; border: 1px solid #ccc; background: #fff; }
+    button:hover { background: #f5f5f5; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.primary { background: #111; color: #fff; border-color: #111; }
+    button.primary:hover { background: #333; }
+    .card { border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; margin: 16px 0; }
+    input { padding: 10px; font-size: 16px; width: 100%; box-sizing: border-box; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+    .success { color: #16a34a; }
+    .error { color: #dc2626; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .status-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .status-row:last-child { border-bottom: none; }
+    .badge { font-size: 12px; padding: 2px 8px; border-radius: 12px; background: #eee; }
+    .badge.ok { background: #dcfce7; color: #166534; }
+    .badge.warn { background: #fef9c3; color: #854d0e; }
+  </style>
+</head>
+<body>
+  <h1>🔗 Pipedream Connect Demo</h1>
+  <p>Environment: <strong>development</strong> | Project: <code>proj_Das5blo</code></p>
+
+  <div class="card">
+    <h2>1. Connect Accounts</h2>
+    <p>Connect your Notion and Google Calendar accounts via Pipedream.</p>
+    <button id="btn-notion">Connect Notion</button>
+    <button id="btn-gcal">Connect Google Calendar</button>
+  </div>
+
+  <div class="card">
+    <h2>2. Sync Status</h2>
+    <div id="sync-status">
+      <div class="status-row"><span>Auto-polling</span><span class="badge" id="poll-badge">checking…</span></div>
+      <div class="status-row"><span>Last sync</span><span id="last-sync">—</span></div>
+      <div class="status-row"><span>Tasks synced</span><span id="synced-count">—</span></div>
+      <div class="status-row"><span>Database ID</span><span id="db-id">—</span></div>
+    </div>
+    <button id="btn-sync-now" class="primary">Sync Now</button>
+    <pre id="sync-result"></pre>
+  </div>
+
+  <div class="card">
+    <h2>3. Connected Accounts</h2>
+    <button id="btn-refresh">Refresh Accounts</button>
+    <pre id="accounts">Click refresh to see connected accounts.</pre>
+  </div>
+
+  <div class="card">
+    <h2>4. Manual Tool: Create Calendar Event</h2>
+    <p>Create a one-off Google Calendar event using your connected account.</p>
+    <input type="text" id="event-title" placeholder="Event title" value="Team Standup">
+    <input type="datetime-local" id="event-date">
+    <button id="btn-sync">Create Event</button>
+    <pre id="manual-result"></pre>
+  </div>
+
+  <script>
+    async function connectAccount(app) {
+      const res = await fetch(`/api/token?app=${app}`);
+      const data = await res.json();
+      if (data.error) {
+        alert('Error: ' + data.error);
+        return;
+      }
+      window.open(data.connectUrl, 'pd-connect', 'width=600,height=700');
+    }
+
+    async function loadAccounts() {
+      const el = document.getElementById('accounts');
+      el.textContent = 'Loading...';
+      try {
+        const res = await fetch('/api/accounts');
+        const data = await res.json();
+        el.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        el.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function loadSyncStatus() {
+      try {
+        const res = await fetch('/api/sync-status');
+        const data = await res.json();
+        document.getElementById('last-sync').textContent = data.lastSyncAt
+          ? new Date(data.lastSyncAt).toLocaleString()
+          : 'Never';
+        document.getElementById('synced-count').textContent = data.syncedCount ?? 0;
+        document.getElementById('db-id').textContent = data.databaseId ?? 'Not set';
+        const pollBadge = document.getElementById('poll-badge');
+        if (data.databaseId) {
+          pollBadge.textContent = 'Active (60s)';
+          pollBadge.className = 'badge ok';
+        } else {
+          pollBadge.textContent = 'No DB ID';
+          pollBadge.className = 'badge warn';
+        }
+      } catch (err) {
+        console.error('Failed to load sync status:', err);
+      }
+    }
+
+    async function syncNow() {
+      const btn = document.getElementById('btn-sync-now');
+      const resultEl = document.getElementById('sync-result');
+      btn.disabled = true;
+      resultEl.textContent = 'Syncing…';
+      resultEl.className = '';
+
+      try {
+        const res = await fetch('/api/sync', { method: 'POST' });
+        const data = await res.json();
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        resultEl.className = data.success ? 'success' : 'error';
+        loadSyncStatus();
+      } catch (err) {
+        resultEl.textContent = 'Error: ' + err.message;
+        resultEl.className = 'error';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function createManualEvent() {
+      const title = document.getElementById('event-title').value.trim();
+      const dateVal = document.getElementById('event-date').value;
+      const resultEl = document.getElementById('manual-result');
+
+      if (!title || !dateVal) {
+        resultEl.textContent = 'Please enter a title and select a date/time.';
+        resultEl.className = 'error';
+        return;
+      }
+
+      resultEl.textContent = 'Creating event...';
+      resultEl.className = '';
+
+      try {
+        const res = await fetch('/api/notion-to-google-calendar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, date: new Date(dateVal).toISOString() })
+        });
+        const data = await res.json();
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        resultEl.className = data.success ? 'success' : 'error';
+      } catch (err) {
+        resultEl.textContent = 'Error: ' + err.message;
+        resultEl.className = 'error';
+      }
+    }
+
+    document.getElementById('btn-notion').onclick = () => connectAccount('notion');
+    document.getElementById('btn-gcal').onclick = () => connectAccount('google_calendar');
+    document.getElementById('btn-refresh').onclick = loadAccounts;
+    document.getElementById('btn-sync-now').onclick = syncNow;
+    document.getElementById('btn-sync').onclick = createManualEvent;
+
+    // Set default date to tomorrow at 9:00 AM
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    document.getElementById('event-date').value = tomorrow.toISOString().slice(0, 16);
+
+    // Load status on page load
+    loadSyncStatus();
+    setInterval(loadSyncStatus, 5000);
+  </script>
+</body>
+</html>
