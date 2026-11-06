@@ -56,7 +56,7 @@ Build `opencode-summary`, a TUI-only opencode V2 plugin in `src/opencode-plugins
   - It is deleted when its `lastMessageID` no longer exists (committed revert, fork, child session).
   - A staged revert keeps it.
 - **Generate rules:**
-  - `g` is blocked while the agent is running, while a revert is staged, or while a generation is in flight.
+  - `g` is blocked while the agent is running or while a generation is in flight. With a staged revert, `g` works and `lastMessageID` is capped at the revert boundary.
   - A failure keeps the old summary.
   - Closing the modal mid-generation finishes in the background and shows "Summary ready".
 - **Prompt:** `prompts/summary.md` overrides `DEFAULT_PROMPT`. A fixed `GUARD` line is always prepended.
@@ -751,7 +751,7 @@ ui.slot({ append: "prompt.footer.status", render: (props) => <FooterStatus sessi
 ## Phase 3: Validity check and generate guards
 
 ### Overview
-Read-time deletion when `lastMessageID` is gone (committed revert, fork, child). Generate is blocked while the agent is running or a revert is staged, with the footer hint reflecting it. A staged revert keeps the summary.
+Read-time deletion when `lastMessageID` is gone (committed revert, fork, child). Generate is blocked while the agent is running, with the hint reflecting it. A staged revert keeps the summary and does not block generate; `lastMessageID` is capped at the revert boundary (user decision).
 
 ### Changes Required:
 

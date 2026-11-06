@@ -20,4 +20,3 @@ Create an opencode plugin that summarizes a conversation on demand.
      - View the summarization prompt.
      - Edit the summarization prompt.
      - See the summary plugin options.
-8. **Location.** Plugin source lives at `src/opencode-plugins/opencode-summary`.

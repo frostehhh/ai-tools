@@ -53,10 +53,8 @@ export default Plugin.define({
     }
 
     async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> {
-      const info = await client.session.get({ sessionID })
       return lib.blockReason({
         status: context.data.session.status(sessionID),
-        revertStaged: Boolean(info.revert),
         inFlight: inFlight(sessionID),
       })
     }
@@ -98,8 +96,13 @@ export default Plugin.define({
     /** Returns true when a new record was written. */
     async function generate(sessionID: string): Promise<boolean> {
       const prompt = DEFAULT_PROMPT
-      const last = (await client.message.list({ sessionID, order: "desc", limit: 1 })).data[0]
-      if (!last) {
+      const [info, page] = await Promise.all([
+        client.session.get({ sessionID }),
+        client.message.list({ sessionID, order: "desc", limit: lib.TURN_LIMIT }),
+      ])
+      // A staged revert hides messages from revert.messageID on; cap lastMessageID at the boundary.
+      const lastMessageID = lib.lastVisibleID(page.data.map((message) => message.id), info.revert?.messageID)
+      if (!lastMessageID) {
         ui.toast.show({ variant: "warning", message: "Nothing to summarize yet" })
         return false
       }
@@ -115,7 +118,7 @@ export default Plugin.define({
         text: result.text.trim(),
         generatedAt: Date.now(),
         promptId: lib.promptId(prompt),
-        lastMessageID: last.id,
+        lastMessageID,
       })
       return true
     }

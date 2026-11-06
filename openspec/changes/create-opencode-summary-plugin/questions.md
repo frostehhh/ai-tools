@@ -101,6 +101,6 @@ Questions that will steer code exploration and research
 40. Across these tools, what common patterns exist for: summary storage location, "last generated" display, prompt customization, preferred-model selection with fallback, and modal or panel UI with hotkeys?
 
 ## Repo conventions
-41. How is config in `src/` linked to `~/.config/opencode/` and other consumers (`links.json`, `tools/syncLinks/README.md`)? What links exist today for `src/` content (e.g. `src/.opencode/agents`)? How would a directory like `src/opencode-plugins/` relate to `links.json` and `~/.config/opencode/plugins/`?
+41. How is config in `src/` linked to `~/.config/opencode/` and other consumers (`links.json`, `tools/syncLinks/README.md`)? Where would a new plugin under `src/` need to live to be shareable and linked?
 42. What do `tools/syncLinks/README.md` and `tools/linkSkills/README.md` say about adding new kinds of artifacts?
 43. What testing, typing, or build conventions exist for TypeScript/JavaScript in this repo and in `~/.config/opencode/` (`package.json`, `tsconfig`, test runner)?

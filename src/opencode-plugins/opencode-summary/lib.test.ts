@@ -78,13 +78,18 @@ describe("turns", () => {
 
 describe("guards", () => {
   test("blockReason precedence", () => {
-    expect(lib.blockReason({ status: "idle", revertStaged: false, inFlight: false })).toBeUndefined()
-    expect(lib.blockReason({ status: "running", revertStaged: true, inFlight: false })).toBe("running")
-    expect(lib.blockReason({ status: "idle", revertStaged: true, inFlight: false })).toBe("revert-pending")
-    expect(lib.blockReason({ status: "running", revertStaged: true, inFlight: true })).toBe("in-flight")
+    expect(lib.blockReason({ status: "idle", inFlight: false })).toBeUndefined()
+    expect(lib.blockReason({ status: "running", inFlight: false })).toBe("running")
+    expect(lib.blockReason({ status: "running", inFlight: true })).toBe("in-flight")
   })
   test("blockMessage", () => {
-    expect(lib.blockMessage("revert-pending")).toBe("Revert pending - send a message or undo first")
+    expect(lib.blockMessage("running")).toBe("Agent is running - wait for it to finish")
+  })
+  test("lastVisibleID respects a staged revert", () => {
+    const ids = ["msg_05", "msg_04", "msg_03", "msg_02"]
+    expect(lib.lastVisibleID(ids)).toBe("msg_05")
+    expect(lib.lastVisibleID(ids, "msg_04")).toBe("msg_03")
+    expect(lib.lastVisibleID(ids, "msg_02")).toBeUndefined()
   })
 })
 

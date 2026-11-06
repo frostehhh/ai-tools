@@ -82,17 +82,17 @@ export function errorMessage(cause: unknown): string {
   return typeof cause === "string" && cause ? cause : "Unknown error"
 }
 
-export type BlockReason = "running" | "revert-pending" | "in-flight"
+export type BlockReason = "running" | "in-flight"
 
-export function blockReason(input: {
-  status: "idle" | "running"
-  revertStaged: boolean
-  inFlight: boolean
-}): BlockReason | undefined {
+export function blockReason(input: { status: "idle" | "running"; inFlight: boolean }): BlockReason | undefined {
   if (input.inFlight) return "in-flight"
   if (input.status === "running") return "running"
-  if (input.revertStaged) return "revert-pending"
   return undefined
+}
+
+/** Newest visible message id. `idsDesc` is newest first; a staged revert hides ids >= `revertBoundary`. */
+export function lastVisibleID(idsDesc: readonly string[], revertBoundary?: string): string | undefined {
+  return revertBoundary === undefined ? idsDesc[0] : idsDesc.find((id) => id < revertBoundary)
 }
 
 export function blockMessage(reason: BlockReason): string {
@@ -101,8 +101,6 @@ export function blockMessage(reason: BlockReason): string {
       return "Already generating"
     case "running":
       return "Agent is running - wait for it to finish"
-    case "revert-pending":
-      return "Revert pending - send a message or undo first"
   }
 }
 

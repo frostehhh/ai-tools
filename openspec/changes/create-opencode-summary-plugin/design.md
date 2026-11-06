@@ -257,16 +257,11 @@ Not chosen:
 
 #### Generating during a staged revert
 
-Block. While `data.session.get(sessionID)?.revert` is set, `g` shows a warning toast "Revert pending - send a message or undo first" and the footer marks generate unavailable; the existing summary stays visible. Reason: `session/context.ts` and `session/generate.ts` never read `revert`, so a summary generated then would probably cover hidden messages (inferred from source, not run).
-
-```ts
-if (data.session.get(sessionID)?.revert)
-  return ui.toast.show({ variant: "warning", message: "Revert pending - send a message or undo first" })
-```
+Allow, with `lastMessageID` capped at the revert boundary: the newest message whose id is below `session.revert.messageID` (a staged revert hides messages from the boundary on). The turn count and the validity rule then match what the user sees. Known limit: `session.generate` never reads `revert` (`session/context.ts`, `session/generate.ts`, inferred from source, not run), so the text may still mention hidden messages; accepted. If the revert is later committed and removes `lastMessageID`, the next load deletes the summary.
 
 Not chosen:
-- Allow: summary may describe hidden messages; deleted on commit anyway.
-- Allow with `lastMessageID` capped at the revert point: text could still mention hidden messages.
+- Block: safe, but the user cannot regenerate while deciding about a revert (superseded by user decision).
+- Allow with uncapped `lastMessageID`: count and validity would reference hidden messages.
 
 #### Generating while the agent is running
 
@@ -327,7 +322,7 @@ Modal keymap layer (`mode: "modal"`, as `/btw`, `btw.tsx:113`), hints in the foo
 
 | Key | Action |
 |---|---|
-| `g` | Generate / regenerate (blocked when running or revert staged) |
+| `g` | Generate / regenerate (blocked when running) |
 | `v` | Toggle summary / prompt view in the same modal (prompt view shows the fixed guard line, then the effective prompt and its source) |
 | `e` | Edit prompt (`$EDITOR`, textarea fallback) |
 | `r` | Reset prompt to default, after `ui.dialog.confirm` |
