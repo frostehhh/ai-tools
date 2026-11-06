@@ -462,7 +462,7 @@ TUI plugin for opencode V2. `/summary` opens a modal that generates and shows a 
 
 ## Use
 
-`/summary` (or the palette, "View or generate session summary") in a session. Keys: `g` generate, `c` copy, `j/k ↑/↓` scroll, `esc` close.
+`/summary` (or the palette, "Open summary modal") in a session. Keys: `g` generate, `c` copy, `j/k ↑/↓` scroll, `esc` close.
 Bind a global key with `cli.json` `keybinds`: `{"summary.open": "<key>"}`.
 
 ## Develop
