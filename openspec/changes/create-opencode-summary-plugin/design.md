@@ -343,7 +343,7 @@ Follow from the decisions above or from `/btw`; listed for review.
 - `/summary` outside a session route: warning toast "Open a session first" (as `btw.tsx` `run`).
 - No summary yet: modal shows "No summary yet - press g to generate".
 - Subagent/child sessions: allowed; their inherited metadata is dropped by the validity check.
-- Plugin id `opencode-summary`; metadata key `opencode-summary`; command id `summary.open`, slash `summary`, palette group "Session".
+- Plugin id `opencode-summary`; metadata key `opencode-summary`; command id `summary.open`, slash `summary`, palette group "Summary".
 - Repo `README.md` layout lists `src/opencode-plugins/`.
 - Edit: empty save = no change + warning; saving text identical to `DEFAULT_PROMPT` deletes the override.
 
@@ -463,7 +463,7 @@ One keymap-layer entry registers slash, palette and keybind; use `mode: "global"
 ```js
 context.keymap.layer(() => ({
   mode: "global",
-  commands: [{ id: "summary.open", title: "Session summary", group: "Session",
+  commands: [{ id: "summary.open", title: "Session summary", group: "Summary",
                palette: true, slash: { name: "summary" }, run: openModal }],
 }))
 ```

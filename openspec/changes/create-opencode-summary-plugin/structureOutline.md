@@ -57,7 +57,7 @@ export function generatedLine(record: SummaryRecord, now: number): string { ... 
 
 - **`src/opencode-plugins/opencode-summary/lib.test.ts`**: `bun:test` cases for merge/remove (other keys preserved), `readSummary` rejecting bad shapes, `buildRequest` guard first, relative-time boundaries (59 s, 59 m, 23 h, 6 d, 7 d), `isBlank`.
 - **`src/opencode-plugins/opencode-summary/tui.tsx`**: `Plugin.define({ id: "opencode-summary", setup })`.
-  - Global keymap layer: command `summary.open`, slash `summary`, palette, group "Session". Off a session route it shows the toast "Open a session first".
+  - Global keymap layer: command `summary.open`, slash `summary`, palette, group "Summary". Off a session route it shows the toast "Open a session first".
   - Modal: `ui.dialog.show` + `set({size: "large", centered: true})`, with its own header, body and footer layout (inset 3, gap 1, muted `esc` and hints). Body is `<scrollbox><markdown>` or the empty state, plus the generated line.
   - Modal layer: `g` generate, `c` copy via `renderer.copyToClipboardOSC52`, scroll keys.
   - `generate(sessionID)`:

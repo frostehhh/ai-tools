@@ -419,7 +419,7 @@ export default Plugin.define({
               id: "summary.open",
               title: "Session summary",
               description: "View or generate a summary of this session",
-              group: "Session",
+              group: "Summary",
               palette: true,
               slash: { name: "summary" },
               run() {
