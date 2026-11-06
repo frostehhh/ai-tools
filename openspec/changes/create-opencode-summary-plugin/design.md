@@ -104,7 +104,7 @@ load(sessionID)                                     # modal open, indicator rend
   return record
 ```
 
-Modal hotkeys: `g` generate, `v` view prompt, `e` edit prompt, `r` reset prompt, `c` copy, `j/k`/arrows scroll, `esc` close (see "Hotkeys").
+Modal hotkeys: `g` generate, `v` toggle prompt view, `c` copy (summary view only), `e` edit and `r` reset prompt (prompt view only), `j/k`/arrows scroll, `esc` close (see "Hotkeys").
 
 ### Design Questions
 
@@ -301,6 +301,8 @@ Not chosen:
 
 #### Generate failure
 
+A 3 min timeout (`GENERATE_TIMEOUT_MS`) races the call, because `session.generate` has no abort signal and a hung call would otherwise keep the session in the in-flight set forever (seen in manual testing). On timeout: "Summary timed out" error toast, in-flight cleared. The late response, if any, is ignored.
+
 Keep the old summary; error toast (`ui.toast.show({variant: "error"})`). A failed call or empty/whitespace text never writes metadata, so the modal keeps the old summary and timestamp and `g` can be retried.
 
 Not chosen:
@@ -323,9 +325,9 @@ Modal keymap layer (`mode: "modal"`, as `/btw`, `btw.tsx:113`), hints in the foo
 |---|---|
 | `g` | Generate / regenerate (blocked when running) |
 | `v` | Toggle summary / prompt view in the same modal (prompt view shows the fixed guard line, then the effective prompt and its source) |
-| `e` | Edit prompt (`$EDITOR`, textarea fallback) |
-| `r` | Reset prompt to default, after `ui.dialog.confirm` |
-| `c` | Copy summary markdown via `context.renderer.copyToClipboardOSC52(text)`; toast on failure (the TUI clipboard service is internal) |
+| `e` | Edit prompt (`$EDITOR`, textarea fallback); prompt view only |
+| `r` | Reset prompt to default, after `ui.dialog.confirm`; prompt view only |
+| `c` | Copy summary markdown (summary view only) via `context.renderer.copyToClipboardOSC52(text)`; toast on failure (the TUI clipboard service is internal) |
 | `j/k`, up/down, pageup/pagedown, home/end | Scroll (as `/btw`, `useKeyboard`) |
 | `esc` | Close (or leave prompt view) |
 

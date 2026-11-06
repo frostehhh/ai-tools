@@ -13,10 +13,10 @@ A TUI-only opencode V2 plugin at `src/opencode-plugins/opencode-summary`, linked
 
 #### User-facing
 - `/summary` (slash or palette) in a session opens a modal: stored summary or "No summary yet - press g to generate", plus `Generated 2h ago · 14:05 · 11/5/2026 · 3 turns ago`.
-- Modal keys: `g` generate, `v` prompt view, `e` edit prompt, `r` reset prompt, `c` copy, scroll keys, `esc`.
+- Modal keys: `g` generate, `v` toggle prompt view, `c` copy (summary view only), `e` edit and `r` reset prompt (prompt view only), scroll keys, `esc`.
 - Footer `prompt.footer.status`: `summary up to date` / `summary 1 turn ago` / `summary N turns ago` / `summary 200+ turns ago`; spinner while generating.
 - The summary persists across restarts. It is deleted once a committed revert removes any message it covered (this also covers forks and child sessions). A staged revert keeps it.
-- `g` is blocked while the agent is running, while a revert is staged, or while a generation is already in flight. A failed generation keeps the old summary.
+- `g` is blocked while the agent is running or while a generation is already in flight. With a staged revert `g` works and `lastMessageID` is capped at the revert boundary. A failed or timed-out (3 min) generation keeps the old summary.
 
 #### Repo
 - Plugin files `tui.tsx`, `prompt.ts`, `lib.ts`, `lib.test.ts`, `README.md`. `prompts/summary.md` is created by the edit hotkey.
@@ -61,8 +61,8 @@ export function generatedLine(record: SummaryRecord, now: number): string { ... 
   - Modal: `ui.dialog.show` + `set({size: "large", centered: true})`, with its own header, body and footer layout (inset 3, gap 1, muted `esc` and hints). Body is `<scrollbox><markdown>` or the empty state, plus the generated line.
   - Modal layer: `g` generate, `c` copy via `renderer.copyToClipboardOSC52`, scroll keys.
   - `generate(sessionID)`:
-    1. Get `lastMessageID` from `client.message.list({sessionID, order: "desc", limit: 1})`.
-    2. Call `client.session.generate`.
+    1. Get `lastMessageID`: newest id from `client.message.list({sessionID, order: "desc", limit: 200})` below `session.revert.messageID` (newest overall when no revert), via `lib.lastVisibleID`.
+    2. Call `client.session.generate`, raced against a 3 min timeout so a hung call clears the in-flight entry.
     3. On blank text or error: error toast, no write.
     4. Otherwise read-merge-write via `client.session.update({sessionID, metadata})`.
   - Captures the plugin context outside the dialog component (`btw.tsx:46`).
@@ -143,15 +143,16 @@ function refresh(sessionID: string): void { ... }   // debounced; updates footer
 
 ## Phase 3: Validity check and generate guards
 
-Applies the deletion rule, read-time and not tied to events: if `lastMessageID` no longer exists, the summary is removed. It also blocks generation while the agent is running or a revert is staged.
+Applies the deletion rule, read-time and not tied to events: if `lastMessageID` no longer exists, the summary is removed. It also blocks generation while the agent is running (a staged revert does not block).
 
 ### File Changes
 
 - **`lib.ts`**: decisions as pure functions.
 
 ```typescript
-export type BlockReason = "running" | "revert-pending" | "in-flight"
-export function blockReason(input: { status: "idle" | "running"; revertStaged: boolean; inFlight: boolean }): BlockReason | undefined { ... }
+export type BlockReason = "running" | "in-flight"
+export function blockReason(input: { status: "idle" | "running"; inFlight: boolean }): BlockReason | undefined { ... }
+export function lastVisibleID(idsDesc: readonly string[], revertBoundary?: string): string | undefined { ... }
 export function blockMessage(reason: BlockReason): string { ... }
 export function validityAction(check: { found: true } | { found: false; notFound: boolean }): "keep" | "delete" { ... }   // other errors keep
 ```
@@ -160,7 +161,7 @@ export function validityAction(check: { found: true } | { found: false; notFound
 - **`tui.tsx`**:
   - `loadSummary(sessionID)` reads metadata and calls `client.session.message.get({sessionID, messageID: lastMessageID})`. On not-found it calls `writeSummary(sessionID, undefined)`. It runs on modal open and on every refresh.
   - The refresh also runs on `session.revert.committed`.
-  - `g` checks `blockReason` using `data.session.status` and `data.session.get(sessionID)?.revert`, shows a warning toast, and the footer hint marks `g` unavailable.
+  - `g` checks `blockReason` using `data.session.status` and the in-flight set, shows a warning toast, and the footer hint marks `g` unavailable.
   - `session.revert.staged`/`cleared` refresh the blocked state.
 
 ```typescript
@@ -179,8 +180,8 @@ function isMessageNotFound(error: unknown): boolean { ... }   // shape verified 
 
 #### Manual Verification
 
-- [ ] Stage a revert to before the summary: the summary stays and `g` shows "Revert pending - send a message or undo first".
-- [ ] Undo the revert: the summary stays and `g` works.
+- [ ] Stage a revert to before the summary: the summary stays and `g` works; the new summary counts turns from the last visible message.
+- [ ] Undo the revert: the summary stays.
 - [ ] Stage a revert, then send a message (commit): the summary is deleted and the footer is hidden.
 - [ ] A revert that only removes messages after the summary keeps it.
 - [ ] While the agent runs, `g` shows "Agent is running - wait for it to finish".

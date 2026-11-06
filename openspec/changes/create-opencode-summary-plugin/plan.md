@@ -302,7 +302,7 @@ export default Plugin.define({
     /** Returns true when a new record was written. */
     async function generate(sessionID: string): Promise<boolean> {
       const prompt = DEFAULT_PROMPT
-      const last = (await client.message.list({ sessionID, order: "desc", limit: 1 })).data[0]
+      const last = (await client.message.list({ sessionID, order: "desc", limit: 1 })).data[0] // Phase 3 replaces this with lib.lastVisibleID
       if (!last) {
         ui.toast.show({ variant: "warning", message: "Nothing to summarize yet" })
         return false
@@ -755,36 +755,33 @@ Read-time deletion when `lastMessageID` is gone (committed revert, fork, child).
 
 ### Changes Required:
 
-> **Superseded by user decision:** generate is NOT blocked by a staged revert. `blockReason` has only `running | in-flight` (no `revertStaged`, no `revert-pending`), and `lib.lastVisibleID` caps `lastMessageID` at `session.revert.messageID` in `generate`. The snippets below show the original blocking version; see the code for the final shape.
-
 - [x] 3.1 Decision helpers
 
 **File**: `lib.ts`
+**Changes**: generate is not blocked by a staged revert (user decision). `lastMessageID` is capped at the revert boundary instead.
 
 ```ts
-export type BlockReason = "running" | "revert-pending" | "in-flight"
+export type BlockReason = "running" | "in-flight"
 
-export function blockReason(input: { status: "idle" | "running"; revertStaged: boolean; inFlight: boolean }): BlockReason | undefined {
+export function blockReason(input: { status: "idle" | "running"; inFlight: boolean }): BlockReason | undefined {
   if (input.inFlight) return "in-flight"
   if (input.status === "running") return "running"
-  if (input.revertStaged) return "revert-pending"
   return undefined
+}
+
+/** Newest visible message id. `idsDesc` is newest first; a staged revert hides ids >= `revertBoundary`. */
+export function lastVisibleID(idsDesc: readonly string[], revertBoundary?: string): string | undefined {
+  return revertBoundary === undefined ? idsDesc[0] : idsDesc.find((id) => id < revertBoundary)
 }
 
 export function blockMessage(reason: BlockReason): string {
   switch (reason) {
     case "in-flight": return "Already generating"
     case "running": return "Agent is running - wait for it to finish"
-    case "revert-pending": return "Revert pending - send a message or undo first"
   }
 }
 
-export function isMessageNotFound(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false
-  const { _tag, name } = error as { _tag?: unknown; name?: unknown }
-  return _tag === "MessageNotFoundError" || name === "MessageNotFoundError"
-}
-
+export function isMessageNotFound(error: unknown): boolean { /* _tag or name === "MessageNotFoundError" */ }
 export type ValidityCheck = { found: true } | { found: false; notFound: boolean }
 export const validityAction = (check: ValidityCheck): "keep" | "delete" => (!check.found && check.notFound ? "delete" : "keep")
 ```
@@ -796,13 +793,18 @@ export const validityAction = (check: ValidityCheck): "keep" | "delete" => (!che
 ```ts
 describe("guards", () => {
   test("blockReason precedence", () => {
-    expect(lib.blockReason({ status: "idle", revertStaged: false, inFlight: false })).toBeUndefined()
-    expect(lib.blockReason({ status: "running", revertStaged: true, inFlight: false })).toBe("running")
-    expect(lib.blockReason({ status: "idle", revertStaged: true, inFlight: false })).toBe("revert-pending")
-    expect(lib.blockReason({ status: "running", revertStaged: true, inFlight: true })).toBe("in-flight")
+    expect(lib.blockReason({ status: "idle", inFlight: false })).toBeUndefined()
+    expect(lib.blockReason({ status: "running", inFlight: false })).toBe("running")
+    expect(lib.blockReason({ status: "running", inFlight: true })).toBe("in-flight")
   })
   test("blockMessage", () => {
-    expect(lib.blockMessage("revert-pending")).toBe("Revert pending - send a message or undo first")
+    expect(lib.blockMessage("running")).toBe("Agent is running - wait for it to finish")
+  })
+  test("lastVisibleID respects a staged revert", () => {
+    const ids = ["msg_05", "msg_04", "msg_03", "msg_02"]
+    expect(lib.lastVisibleID(ids)).toBe("msg_05")
+    expect(lib.lastVisibleID(ids, "msg_04")).toBe("msg_03")
+    expect(lib.lastVisibleID(ids, "msg_02")).toBeUndefined()
   })
 })
 
@@ -827,7 +829,9 @@ describe("validity", () => {
 **File**: `tui.tsx`
 **Changes**:
 - `loadSummary` checks `lastMessageID` and deletes the record on not-found.
-- `startGenerate` checks `blockReason` using `data.session.status` plus a fresh `session.get().revert`.
+- `startGenerate` checks `blockReason` using `data.session.status` and the in-flight set.
+- `generate` reads `session.get()` and the newest 200 messages, and sets `lastMessageID` with `lib.lastVisibleID(ids, info.revert?.messageID)`.
+- `generate` races `session.generate` against `lib.GENERATE_TIMEOUT_MS` (3 min, `lib.ts`) so a hung call cannot keep the session in flight.
 - The modal hint marks `g` unavailable.
 
 ```diff
@@ -849,10 +853,8 @@ describe("validity", () => {
 
 ```ts
 async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> {
-  const info = await client.session.get({ sessionID })
   return lib.blockReason({
     status: context.data.session.status(sessionID),
-    revertStaged: Boolean(info.revert),
     inFlight: inFlight(sessionID),
   })
 }
@@ -881,8 +883,8 @@ async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> 
 **File**: `README.md` (plugin)
 
 ```markdown
-- [x] Staged revert before the summary: summary stays; `g` -> "Revert pending - send a message or undo first"
-- [x] Undo the revert: summary stays; `g` works
+- [x] Staged revert before the summary: summary stays; `g` works and the new summary's turn count is relative to the last visible message
+- [x] Undo the revert: summary stays
 - [x] Commit the revert (send a message): summary deleted, footer hidden
 - [x] Revert removing only messages after the summary keeps it
 - [x] Agent running: `g` -> "Agent is running - wait for it to finish"
@@ -1078,12 +1080,19 @@ async function resetPrompt(sessionID: string): Promise<void> {
 +    enabled: mode() !== "edit", // letters go to the textarea while editing
      commands: [
        { bind: "g", title: "Generate summary", group: "Dialog", run },
-       { bind: "c", title: "Copy summary", group: "Dialog", run: copy },
 +      { bind: "v", title: "Toggle prompt view", group: "Dialog", run: () => setMode((m) => (m === "summary" ? "prompt" : "summary")) },
-+      { bind: "e", title: "Edit prompt", group: "Dialog", run: edit },
-+      { bind: "r", title: "Reset prompt", group: "Dialog", run: () => void resetPrompt(props.sessionID).catch(toastError) },
      ],
    }))
++  // separate layers: copy only in summary view, edit/reset only in prompt view
++  context.keymap.layer(() => ({ mode: "modal", enabled: mode() === "summary", commands: [{ bind: "c", title: "Copy summary", group: "Dialog", run: copy }] }))
++  context.keymap.layer(() => ({
++    mode: "modal",
++    enabled: mode() === "prompt",
++    commands: [
++      { bind: "e", title: "Edit prompt", group: "Dialog", run: edit },
++      { bind: "r", title: "Reset prompt", group: "Dialog", run: () => void resetPrompt(props.sessionID).catch(toastError) },
++    ],
++  }))
 ```
 
 `useKeyboard` scrolling returns early while `mode() === "edit"`, so `j/k` and arrows move the textarea cursor.
@@ -1160,8 +1169,13 @@ The prompt view replaces the summary body when `mode() === "prompt"`:
 <Show when={mode() === "summary" && stale()}>
   <text fg={theme().text.muted}>Generated with a different prompt</text>
 </Show>
-<Hints items={[[reason() ? `generate (${reason()})` : "generate", "g"], [mode() === "summary" ? "prompt" : "summary", "v"],
-  ["edit", "e"], ["reset", "r"], ["copy", "c"], ["scroll", "j/k"]]} />
+<Hints items={[
+  [reason() ? `generate (${reason()})` : "generate", "g"],
+  [mode() === "summary" ? "prompt" : "summary", "v"],
+  ...(mode() === "prompt" ? [["edit", "e"], ["reset", "r"]] : []),
+  ...(mode() === "summary" ? [["copy", "c"]] : []),
+  ["scroll", "j/k"],
+]} />
 ```
 
 ```diff
@@ -1177,7 +1191,7 @@ The prompt view replaces the summary body when `mode() === "prompt"`:
 - [x] 4.4 README prompt section and checklist
 
 **File**: `README.md` (plugin)
-**Changes**: add a "Prompt" section and checklist items. Update "Use" keys to `g v e r c`.
+**Changes**: add a "Prompt" section and checklist items. Update "Use" keys: `g v c` (copy in summary view), `e r` (prompt view only).
 
 ````markdown
 ## Prompt
