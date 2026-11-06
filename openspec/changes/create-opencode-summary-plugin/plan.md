@@ -524,7 +524,7 @@ link.
 - [x] Link entry parses: `python3 tools/syncLinks/sync.py --config links.example.json --group opencode-plugins --dry-run` lists `~/.config/opencode/plugins/opencode-summary` as missing
 
 #### Manual Verification:
-- [ ] User adds the group to `links.json` and runs `python3 tools/syncLinks/sync.py`, then `--check` (writes to `~`; user runs or approves)
+- [x] User adds the group to `links.json` and runs `python3 tools/syncLinks/sync.py`, then `--check` (writes to `~`; user runs or approves)
 - [ ] Restart opencode: `/summary` is in slash completion and the palette; the TUI log shows no plugin load error
 - [ ] On the home screen, `/summary` shows the toast "Open a session first"
 - [ ] In a session with messages, the empty state shows; `g` shows "Generating…", then the summary with the TL;DR section and `Generated just now · …`
