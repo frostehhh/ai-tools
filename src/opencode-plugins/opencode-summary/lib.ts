@@ -54,9 +54,27 @@ export function datetime(ts: number): string {
   return `${date.toLocaleTimeString(undefined, { timeStyle: "short" })} · ${date.toLocaleDateString()}`
 }
 
-export function generatedLine(record: SummaryRecord, now: number): string {
+export const TURN_LIMIT = 200
+export type Turns = { count: number; capped: boolean }
+
+/** `userMessageIDs` = one page of user messages (newest first, at most `limit`). IDs sort as strings. */
+export function turnsSince(userMessageIDs: readonly string[], lastMessageID: string, limit = TURN_LIMIT): Turns {
+  const count = userMessageIDs.filter((id) => id > lastMessageID).length
+  return { count, capped: userMessageIDs.length >= limit && count >= limit }
+}
+
+export function turnsText({ count, capped }: Turns): string {
+  if (capped) return `${TURN_LIMIT}+ turns ago`
+  if (count === 0) return "up to date"
+  return count === 1 ? "1 turn ago" : `${count} turns ago`
+}
+
+export const turnLabel = (turns: Turns) => `summary ${turnsText(turns)}`
+
+export function generatedLine(record: SummaryRecord, now: number, turns?: Turns): string {
   const relative = relativeTime(record.generatedAt, now)
-  return ["Generated", ...(relative ? [`${relative} ·`] : []), datetime(record.generatedAt)].join(" ")
+  const parts = ["Generated", ...(relative ? [`${relative} ·`] : []), datetime(record.generatedAt)]
+  return turns ? `${parts.join(" ")} · ${turnsText(turns)}` : parts.join(" ")
 }
 
 export function errorMessage(cause: unknown): string {

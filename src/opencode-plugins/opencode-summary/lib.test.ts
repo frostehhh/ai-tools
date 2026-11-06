@@ -54,3 +54,24 @@ test("generatedLine drops relative part at 7+ days", () => {
   expect(lib.generatedLine(record, record.generatedAt + 7_200_000)).toMatch(/^Generated 2h ago · .+ · .+$/)
   expect(lib.generatedLine(record, record.generatedAt + 8 * 86_400_000)).toMatch(/^Generated [^·]+ · [^·]+$/)
 })
+
+describe("turns", () => {
+  const ids = ["msg_03", "msg_02", "msg_01"]
+  test("turnsSince counts strictly newer ids", () => {
+    expect(lib.turnsSince(ids, "msg_03")).toEqual({ count: 0, capped: false })
+    expect(lib.turnsSince(ids, "msg_02")).toEqual({ count: 1, capped: false })
+    expect(lib.turnsSince(ids, "msg_00")).toEqual({ count: 3, capped: false })
+  })
+  test("cap at limit", () => {
+    expect(lib.turnsSince(["c", "b"], "a", 2)).toEqual({ count: 2, capped: true })
+  })
+  test("wording", () => {
+    expect(lib.turnLabel({ count: 0, capped: false })).toBe("summary up to date")
+    expect(lib.turnLabel({ count: 1, capped: false })).toBe("summary 1 turn ago")
+    expect(lib.turnLabel({ count: 7, capped: false })).toBe("summary 7 turns ago")
+    expect(lib.turnLabel({ count: 200, capped: true })).toBe("summary 200+ turns ago")
+  })
+  test("generatedLine appends turns", () => {
+    expect(lib.generatedLine(record, record.generatedAt, { count: 3, capped: false })).toMatch(/ · 3 turns ago$/)
+  })
+})

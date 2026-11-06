@@ -1,7 +1,7 @@
 import { Plugin } from "@opencode/plugin/tui"
 import { SyntaxStyle, TextAttributes, type ScrollBoxRenderable } from "@opentui/core"
 import { useKeyboard, useTerminalDimensions } from "@opentui/solid"
-import { createMemo, createSignal, For, Show } from "solid-js"
+import { createMemo, createResource, createSignal, For, onCleanup, Show } from "solid-js"
 import * as lib from "./lib"
 import { DEFAULT_PROMPT } from "./prompt"
 
@@ -42,6 +42,40 @@ export default Plugin.define({
       return lib.readSummary(await readMetadata(sessionID))
     }
 
+    const [tick, setTick] = createSignal(0)
+    let pending: ReturnType<typeof setTimeout> | undefined
+    const bump = () => {
+      clearTimeout(pending)
+      pending = setTimeout(() => setTick((n) => n + 1), 150)
+    }
+    const stops = (
+      [
+        "session.inbox.delivered",
+        "session.metadata.updated",
+        "session.revert.committed",
+        "session.revert.staged",
+        "session.revert.cleared",
+        "session.execution.started",
+        "session.execution.succeeded",
+        "session.execution.failed",
+        "session.execution.interrupted",
+      ] as const
+    ).map((type) => context.data.on(type, bump))
+
+    const [flight, setFlight] = context.storage.memory("inflight", { initial: { sessions: [] as string[] } })
+    const inFlight = (sessionID: string) => flight.sessions.includes(sessionID)
+    const [modalFor, setModalFor] = createSignal<string>()
+
+    async function countTurns(sessionID: string, lastMessageID: string): Promise<lib.Turns> {
+      const page = await client.message.list({ sessionID, type: "user", order: "desc", limit: lib.TURN_LIMIT })
+      return lib.turnsSince(page.data.map((message) => message.id), lastMessageID)
+    }
+
+    async function loadView(sessionID: string) {
+      const record = await loadSummary(sessionID)
+      return record ? { record, turns: await countTurns(sessionID, record.lastMessageID) } : undefined
+    }
+
     /** Returns true when a new record was written. */
     async function generate(sessionID: string): Promise<boolean> {
       const prompt = DEFAULT_PROMPT
@@ -67,6 +101,48 @@ export default Plugin.define({
       return true
     }
 
+    async function startGenerate(sessionID: string): Promise<void> {
+      if (inFlight(sessionID)) return void ui.toast.show({ variant: "warning", message: "Already generating" })
+      setFlight((draft) => void draft.sessions.push(sessionID))
+      try {
+        const written = await generate(sessionID)
+        if (written && modalFor() !== sessionID) ui.toast.show({ variant: "success", message: "Summary ready", sessionID })
+      } catch (cause) {
+        toastError(cause)
+      } finally {
+        setFlight((draft) => void (draft.sessions = draft.sessions.filter((id) => id !== sessionID)))
+        bump()
+      }
+    }
+
+    function Spinner(props: { label: string }) {
+      const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+      const [i, setI] = createSignal(0)
+      const timer = setInterval(() => setI((n) => (n + 1) % frames.length), 80)
+      onCleanup(() => clearInterval(timer))
+      return <text fg={context.theme.hue.interactive[200]}>{`${frames[i()]} ${props.label}`}</text>
+    }
+
+    function FooterStatus(props: { sessionID?: string }) {
+      const [view] = createResource(
+        () => (props.sessionID ? ([props.sessionID, tick()] as const) : undefined),
+        ([sessionID]) => loadView(sessionID).catch(() => undefined),
+      )
+      return (
+        <Show when={props.sessionID}>
+          {(sessionID) => (
+            <Show when={!inFlight(sessionID())} fallback={<Spinner label="/summary" />}>
+              <Show when={view()}>
+                {(current) => <text fg={context.theme.text.muted}>{lib.turnLabel(current().turns)}</text>}
+              </Show>
+            </Show>
+          )}
+        </Show>
+      )
+    }
+
+    ui.slot({ append: "prompt.footer.status", render: (props) => <FooterStatus sessionID={props.sessionID} /> })
+
     function Hints(props: { items: [title: string, key: string][] }) {
       return (
         <box flexDirection="row" gap={2}>
@@ -78,24 +154,12 @@ export default Plugin.define({
     function SummaryDialog(props: { sessionID: string }) {
       const dimensions = useTerminalDimensions()
       const maxHeight = createMemo(() => Math.max(8, Math.floor(dimensions().height * 0.6)))
-      const [record, setRecord] = createSignal<lib.SummaryRecord>()
-      const [busy, setBusy] = createSignal(false)
+      const [view] = createResource(() => [props.sessionID, tick()] as const, ([id]) => loadView(id).catch(toastError))
+      const record = () => view()?.record
+      const busy = () => inFlight(props.sessionID)
       let scroll: ScrollBoxRenderable | undefined
 
-      const reload = () => loadSummary(props.sessionID).then(setRecord, toastError)
-      void reload()
-
-      const run = async () => {
-        if (busy()) return
-        setBusy(true)
-        try {
-          if (await generate(props.sessionID)) await reload()
-        } catch (cause) {
-          toastError(cause)
-        } finally {
-          setBusy(false)
-        }
-      }
+      const run = () => void startGenerate(props.sessionID)
       const copy = () => {
         const text = record()?.text
         if (!text) return
@@ -107,7 +171,7 @@ export default Plugin.define({
       context.keymap.layer(() => ({
         mode: "modal",
         commands: [
-          { bind: "g", title: "Generate summary", group: "Dialog", run: () => void run() },
+          { bind: "g", title: "Generate summary", group: "Dialog", run },
           { bind: "c", title: "Copy summary", group: "Dialog", run: copy },
         ],
       }))
@@ -129,7 +193,7 @@ export default Plugin.define({
             <text fg={theme().text.muted}>esc</text>
           </box>
           <text fg={theme().text.muted}>
-            {busy() ? "Generating…" : record() ? lib.generatedLine(record()!, Date.now()) : "No summary yet - press g to generate"}
+            {busy() ? "Generating…" : view() ? lib.generatedLine(view()!.record, Date.now(), view()!.turns) : "No summary yet - press g to generate"}
           </text>
           <Show when={record()}>
             {(current) => (
@@ -148,7 +212,8 @@ export default Plugin.define({
     }
 
     function openModal(sessionID: string) {
-      ui.dialog.show(() => <SummaryDialog sessionID={sessionID} />)
+      setModalFor(sessionID)
+      ui.dialog.show(() => <SummaryDialog sessionID={sessionID} />, () => setModalFor(undefined))
       ui.dialog.set({ size: "large", centered: true })
     }
 
@@ -180,6 +245,10 @@ export default Plugin.define({
       },
     })
 
-    return () => void context.renderer.idle().then(() => syntax.destroy())
+    return () => {
+      clearTimeout(pending)
+      stops.forEach((stop) => stop())
+      void context.renderer.idle().then(() => syntax.destroy())
+    }
   },
 })

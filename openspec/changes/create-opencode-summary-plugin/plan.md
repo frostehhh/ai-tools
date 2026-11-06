@@ -543,7 +543,7 @@ Turn counting and wording, footer slot with a spinner, a debounced refresh on ev
 
 ### Changes Required:
 
-- [ ] 2.1 Turn helpers
+- [x] 2.1 Turn helpers
 
 **File**: `lib.ts`
 **Changes**: add turn counting and wording; extend `generatedLine`.
@@ -577,7 +577,7 @@ export const turnLabel = (turns: Turns) => `summary ${turnsText(turns)}`
  }
 ```
 
-- [ ] 2.2 Tests
+- [x] 2.2 Tests
 
 **File**: `lib.test.ts`
 **Changes**: add cases.
@@ -605,7 +605,7 @@ describe("turns", () => {
 })
 ```
 
-- [ ] 2.3 Refresh, in-flight, footer slot
+- [x] 2.3 Refresh, in-flight, footer slot
 
 **File**: `tui.tsx`
 **Changes**:
@@ -722,7 +722,7 @@ ui.slot({ append: "prompt.footer.status", render: (props) => <FooterStatus sessi
 +}
 ```
 
-- [ ] 2.4 README checklist
+- [x] 2.4 README checklist
 
 **File**: `README.md` (plugin)
 **Changes**: append to "Manual checklist".
@@ -737,8 +737,8 @@ ui.slot({ append: "prompt.footer.status", render: (props) => <FooterStatus sessi
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Tests pass: `cd src/opencode-plugins/opencode-summary && bun test`
-- [ ] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
+- [x] Tests pass: `cd src/opencode-plugins/opencode-summary && bun test`
+- [x] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
 
 #### Manual Verification:
 - [ ] The README checklist items added in 2.4

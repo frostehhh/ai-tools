@@ -25,3 +25,7 @@ link.
 - [ ] `/summary` in slash completion and palette; on home shows "Open a session first"
 - [ ] Empty state, then `g` shows summary + "Generated …"; persists after TUI restart
 - [ ] `c` copies the markdown
+- [ ] Footer: `summary up to date` after `g`; `summary 1 turn ago`, then `summary 2 turns ago` after messages
+- [ ] `!cmd` shell runs and assistant replies do not change the count
+- [ ] `g` then `esc`: footer spinner, then toast "Summary ready"; `g` mid-run shows "Already generating"
+- [ ] Switching sessions shows each session's own footer
