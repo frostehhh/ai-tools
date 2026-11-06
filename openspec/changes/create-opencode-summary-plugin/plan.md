@@ -755,6 +755,8 @@ Read-time deletion when `lastMessageID` is gone (committed revert, fork, child).
 
 ### Changes Required:
 
+> **Superseded by user decision:** generate is NOT blocked by a staged revert. `blockReason` has only `running | in-flight` (no `revertStaged`, no `revert-pending`), and `lib.lastVisibleID` caps `lastMessageID` at `session.revert.messageID` in `generate`. The snippets below show the original blocking version; see the code for the final shape.
+
 - [x] 3.1 Decision helpers
 
 **File**: `lib.ts`

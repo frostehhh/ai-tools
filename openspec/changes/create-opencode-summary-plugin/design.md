@@ -88,10 +88,9 @@ No `package.json`, no server entry, no build: opencode loads the root `tui.tsx` 
 ```text
 generate(sessionID)
   if status(sessionID) == "running": toast "Agent is running"; return
-  if session.revert: toast "Revert pending"; return
   if inFlight.has(sessionID): toast "Already generating"; return
   prompt = GUARD + "\n\n" + (read(prompts/summary.md) ?? DEFAULT_PROMPT)   # read at generate time
-  lastMessageID = message.list({sessionID, order: "desc", limit: 1})[0].id  # captured before the call
+  lastMessageID = newest message id below session.revert.messageID (or newest overall)  # captured before the call
   text   = session.generate({sessionID, prompt})   # session's current model
   if error or text blank: error toast; keep old record; return
   save({text, generatedAt: now, promptId: hash(prompt), lastMessageID}) for sessionID   # read-merge-write
