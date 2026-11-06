@@ -12,8 +12,25 @@ TUI plugin for opencode V2. `/summary` opens a modal that generates and shows a 
 
 ## Use
 
-`/summary` (or the palette, "View or generate session summary") in a session. Keys: `g` generate, `v` toggle prompt view, `c` copy (summary view), `e` edit and `r` reset prompt (prompt view), `j/k ↑/↓` scroll, `esc` close.
+`/summary` (or the palette, "Open summary modal") in a session. Keys: `g` generate, `v` toggle prompt view, `c` copy (summary view), `e` edit and `r` reset prompt (prompt view), `j/k ↑/↓` scroll, `esc` close.
 Bind a global key with `cli.json` `keybinds`: `{"summary.open": "<key>"}`.
+
+## Commands
+
+Palette section "Summary". Only the first has a slash command.
+
+| Command | Id | Does |
+|---|---|---|
+| Open summary modal | `summary.open` (`/summary`) | opens the modal |
+| Generate summary | `summary.generate` | generates without the modal |
+| Copy summary | `summary.copy` | copies the stored summary |
+| Delete summary | `summary.delete` | removes the stored summary, after confirm |
+| View summary prompt | `summary.prompt.view` | modal in prompt view |
+| Edit summary prompt | `summary.prompt.edit` | `$VISUAL`/`$EDITOR`, else modal editor |
+| Reset summary prompt | `summary.prompt.reset` | deletes the override, after confirm |
+| Toggle summary footer indicator | `summary.indicator.toggle` | hides or shows `summary N turns ago` (the spinner stays) |
+
+The indicator setting is persisted (`storage.store`), so it survives restarts.
 
 ## Prompt
 
@@ -49,3 +66,9 @@ link.
 - [x] `g` uses the edited prompt; older summary shows "Generated with a different prompt"
 - [x] Empty save: warning, previous prompt kept. Text equal to default: override file removed
 - [x] `r` + confirm removes the override; source back to default
+- [ ] Palette "Summary" section lists all eight commands; only "Open summary modal" has `/summary`
+- [ ] Generate summary (palette): spinner in footer, then toast "Summary ready"; no modal
+- [ ] Copy summary (palette): pastes the markdown; with no summary shows "No summary yet"
+- [ ] Delete summary: confirm removes it and hides the footer; with none shows "No summary to delete"
+- [ ] View/Edit/Reset summary prompt (palette) work; Edit with `$EDITOR` unset opens the in-modal editor seeded with the current prompt
+- [ ] Toggle footer indicator hides/shows the turns label; setting persists after TUI restart

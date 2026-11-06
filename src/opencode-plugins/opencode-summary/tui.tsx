@@ -6,7 +6,7 @@ import { spawn } from "node:child_process"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import * as lib from "./lib"
-import { DEFAULT_PROMPT, GUARD } from "./prompt"
+import { GUARD } from "./prompt"
 
 const INSET = 3
 const paths = lib.promptPaths(import.meta.url)
@@ -151,7 +151,7 @@ export default Plugin.define({
       openModal(sessionID, "prompt")
     }
 
-    async function resetPrompt(sessionID: string): Promise<void> {
+    async function resetPrompt(sessionID: string, reopen = true): Promise<void> {
       const confirmed = await ui.dialog.confirm({
         title: "Reset summary prompt?",
         message: `Delete ${ui.format.path(paths.override)} and use the default prompt.`,
@@ -161,7 +161,7 @@ export default Plugin.define({
         await rm(paths.override, { force: true })
         ui.toast.show({ message: "Prompt reset to default" })
       }
-      openModal(sessionID, "prompt")
+      if (reopen) openModal(sessionID, "prompt")
     }
 
     /** Returns true when a new record was written. */
@@ -199,6 +199,34 @@ export default Plugin.define({
       return true
     }
 
+    const [settings, setSettings] = context.storage.store("settings", { initial: { indicator: true } })
+
+    function copyText(text: string) {
+      if (!context.renderer.copyToClipboardOSC52(text))
+        ui.toast.show({ variant: "warning", message: "Copy not supported by this terminal" })
+      else ui.toast.show({ variant: "success", message: "Summary copied" })
+    }
+
+    function currentSession(): string | undefined {
+      const route = ui.router.current()
+      if (route.type === "session") return route.sessionID
+      ui.toast.show({ variant: "warning", message: "Open a session first" })
+      return undefined
+    }
+
+    async function deleteSummary(sessionID: string): Promise<void> {
+      if (!(await loadSummary(sessionID))) return void ui.toast.show({ message: "No summary to delete" })
+      const confirmed = await ui.dialog.confirm({
+        title: "Delete summary?",
+        message: "Remove this session's stored summary.",
+        label: { confirm: "Delete", cancel: "Cancel" },
+      })
+      if (!confirmed) return
+      await writeSummary(sessionID, undefined)
+      ui.toast.show({ message: "Summary deleted" })
+      bump()
+    }
+
     async function startGenerate(sessionID: string): Promise<void> {
       const reason = await blocked(sessionID)
       if (reason) return void ui.toast.show({ variant: "warning", message: lib.blockMessage(reason) })
@@ -231,7 +259,7 @@ export default Plugin.define({
         <Show when={props.sessionID}>
           {(sessionID) => (
             <Show when={!inFlight(sessionID())} fallback={<Spinner label="/summary" />}>
-              <Show when={view()}>
+              <Show when={settings.indicator && view()}>
                 {(current) => <text fg={context.theme.text.muted}>{lib.turnLabel(current().turns)}</text>}
               </Show>
             </Show>
@@ -300,10 +328,7 @@ export default Plugin.define({
       const run = () => void startGenerate(props.sessionID)
       const copy = () => {
         const text = record()?.text
-        if (!text) return
-        if (!context.renderer.copyToClipboardOSC52(text))
-          ui.toast.show({ variant: "warning", message: "Copy not supported by this terminal" })
-        else ui.toast.show({ variant: "success", message: "Summary copied" })
+        if (text) copyText(text)
       }
       const edit = () => {
         const editor = externalEditor()
@@ -366,9 +391,9 @@ export default Plugin.define({
           <text fg={theme().text.muted}>
             {busy() ? "Generating…" : view() ? lib.generatedLine(view()!.record, Date.now(), view()!.turns) : "No summary yet - press g to generate"}
           </text>
-          <Show when={mode() === "edit"}>
+          <Show when={mode() === "edit" && prompt()}>
             <PromptEditor
-              initial={prompt()?.text ?? DEFAULT_PROMPT}
+              initial={prompt()!.text}
               height={Math.max(6, maxHeight() - 4)}
               onDone={(saved) => {
                 setMode("prompt")
@@ -420,18 +445,101 @@ export default Plugin.define({
           commands: [
             {
               id: "summary.open",
-              title: "View or generate session summary",
+              title: "Open summary modal",
               description: "View or generate a summary of this session",
               group: "Summary",
               palette: true,
               slash: { name: "summary" },
               run() {
-                const route = ui.router.current()
-                if (route.type !== "session") {
-                  ui.toast.show({ variant: "warning", message: "Open a session first" })
-                  return
-                }
-                openModal(route.sessionID)
+                const sessionID = currentSession()
+                if (sessionID) openModal(sessionID)
+              },
+            },
+            {
+              id: "summary.generate",
+              title: "Generate summary",
+              description: "Generate a summary without opening the modal",
+              group: "Summary",
+              palette: true,
+              run() {
+                const sessionID = currentSession()
+                if (sessionID) void startGenerate(sessionID)
+              },
+            },
+            {
+              id: "summary.copy",
+              title: "Copy summary",
+              description: "Copy the stored summary to the clipboard",
+              group: "Summary",
+              palette: true,
+              run() {
+                const sessionID = currentSession()
+                if (!sessionID) return
+                void loadSummary(sessionID).then(
+                  (record) => (record ? copyText(record.text) : ui.toast.show({ message: "No summary yet" })),
+                  toastError,
+                )
+              },
+            },
+            {
+              id: "summary.delete",
+              title: "Delete summary",
+              description: "Remove the stored summary of this session",
+              group: "Summary",
+              palette: true,
+              run() {
+                const sessionID = currentSession()
+                if (sessionID) void deleteSummary(sessionID).catch(toastError)
+              },
+            },
+            {
+              id: "summary.prompt.view",
+              title: "View summary prompt",
+              description: "Show the prompt used for summaries",
+              group: "Summary",
+              palette: true,
+              run() {
+                const sessionID = currentSession()
+                if (sessionID) openModal(sessionID, "prompt")
+              },
+            },
+            {
+              id: "summary.prompt.edit",
+              title: "Edit summary prompt",
+              description: "Edit the prompt used for summaries",
+              group: "Summary",
+              palette: true,
+              run() {
+                const sessionID = currentSession()
+                if (!sessionID) return
+                const editor = externalEditor()
+                if (editor) void editWithEditor(sessionID, editor).catch(toastError)
+                else openModal(sessionID, "edit")
+              },
+            },
+            {
+              id: "summary.prompt.reset",
+              title: "Reset summary prompt",
+              description: "Restore the default summary prompt",
+              group: "Summary",
+              palette: true,
+              run() {
+                const sessionID = currentSession()
+                if (sessionID) void resetPrompt(sessionID, false).catch(toastError)
+              },
+            },
+            {
+              id: "summary.indicator.toggle",
+              title: "Toggle summary footer indicator",
+              description: "Show or hide the turns-ago indicator in the prompt footer",
+              group: "Summary",
+              palette: true,
+              run() {
+                const next = !settings.indicator
+                void setSettings((draft) => void (draft.indicator = next)).then(
+                  () => ui.toast.show({ message: next ? "Footer indicator shown" : "Footer indicator hidden" }),
+                  toastError,
+                )
               },
             },
           ],

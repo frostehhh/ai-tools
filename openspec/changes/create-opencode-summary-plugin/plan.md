@@ -417,7 +417,7 @@ export default Plugin.define({
           commands: [
             {
               id: "summary.open",
-              title: "View or generate session summary",
+              title: "Open summary modal",
               description: "View or generate a summary of this session",
               group: "Summary",
               palette: true,
@@ -1223,6 +1223,14 @@ editable. `e` opens `$VISUAL`/`$EDITOR` on the file; if neither is set it opens 
 - [x] Run with `VISUAL= EDITOR= opencode` to exercise the in-modal editor on a multi-line prompt
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
+
+---
+
+## Post-plan additions
+
+- Command title is "Open summary modal", palette group "Summary".
+- Extra palette commands: `summary.generate`, `summary.copy`, `summary.delete`, `summary.prompt.view|edit|reset`, `summary.indicator.toggle` (persisted `storage.store` setting; hides the turns label, keeps the spinner). See `design.md` "Palette commands".
+- The in-modal editor renders only after the prompt has loaded, so it can open directly in `edit` mode.
 
 ---
 

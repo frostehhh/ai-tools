@@ -347,9 +347,13 @@ Follow from the decisions above or from `/btw`; listed for review.
 - Repo `README.md` layout lists `src/opencode-plugins/`.
 - Edit: empty save = no change + warning; saving text identical to `DEFAULT_PROMPT` deletes the override.
 
+#### Palette commands (added after the plan)
+
+Palette group "Summary", all under `mode: "global"`; only `summary.open` ("Open summary modal") has `slash: summary`. Added: `summary.generate`, `summary.copy`, `summary.delete` (confirm), `summary.prompt.view`, `summary.prompt.edit`, `summary.prompt.reset` (confirm, does not reopen the modal), `summary.indicator.toggle`. The toggle is the plugin's only option: `storage.store("settings", {indicator: true})`, persisted; it hides the turns label and keeps the generating spinner.
+
 #### Plugin options hotkey
 
-Dropped. The plugin has no options left (no model, prompt is file-based), and view-prompt already shows the prompt source. Supersedes the "see the summary plugin options" part of task requirement 7.
+Dropped (the one persisted indicator setting above has no hotkey). The plugin has no options left (no model, prompt is file-based), and view-prompt already shows the prompt source. Supersedes the "see the summary plugin options" part of task requirement 7.
 
 Not chosen:
 - Read-only info panel (prompt source, paths, ids): duplicates view-prompt.
@@ -463,7 +467,7 @@ One keymap-layer entry registers slash, palette and keybind; use `mode: "global"
 ```js
 context.keymap.layer(() => ({
   mode: "global",
-  commands: [{ id: "summary.open", title: "View or generate session summary", group: "Summary",
+  commands: [{ id: "summary.open", title: "Open summary modal", group: "Summary",
                palette: true, slash: { name: "summary" }, run: openModal }],
 }))
 ```
