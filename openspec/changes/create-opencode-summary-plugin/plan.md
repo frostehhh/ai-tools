@@ -881,12 +881,12 @@ async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> 
 **File**: `README.md` (plugin)
 
 ```markdown
-- [ ] Staged revert before the summary: summary stays; `g` -> "Revert pending - send a message or undo first"
-- [ ] Undo the revert: summary stays; `g` works
-- [ ] Commit the revert (send a message): summary deleted, footer hidden
-- [ ] Revert removing only messages after the summary keeps it
-- [ ] Agent running: `g` -> "Agent is running - wait for it to finish"
-- [ ] Fork a summarized session: fork shows no summary; parent keeps its own
+- [x] Staged revert before the summary: summary stays; `g` -> "Revert pending - send a message or undo first"
+- [x] Undo the revert: summary stays; `g` works
+- [x] Commit the revert (send a message): summary deleted, footer hidden
+- [x] Revert removing only messages after the summary keeps it
+- [x] Agent running: `g` -> "Agent is running - wait for it to finish"
+- [x] Fork a summarized session: fork shows no summary; parent keeps its own
 ```
 
 ### Success Criteria:
@@ -896,7 +896,7 @@ async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> 
 - [x] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
 
 #### Manual Verification:
-- [ ] The README checklist items added in 3.4
+- [x] The README checklist items added in 3.4
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
@@ -1189,12 +1189,12 @@ editable. `e` opens `$VISUAL`/`$EDITOR` on the file; if neither is set it opens 
 ````
 
 ```markdown
-- [ ] `v` shows the fixed guard line, the default prompt, "source: default (prompt.ts)"
-- [ ] `$EDITOR` set: `e` opens the editor; saving creates `prompts/summary.md` (in `git status`); `v` shows "source: override"
-- [ ] `$EDITOR` unset: `e` shows the in-modal editor; Enter adds a newline; `g`/`v`/`c` type letters; `ctrl+s` saves; `esc` cancels without closing the modal
-- [ ] `g` uses the edited prompt; older summary shows "Generated with a different prompt"
-- [ ] Empty save: warning, previous prompt kept. Text equal to default: override file removed
-- [ ] `r` + confirm removes the override; source back to default
+- [x] `v` shows the fixed guard line, the default prompt, "source: default (prompt.ts)"
+- [x] `$EDITOR` set: `e` opens the editor; saving creates `prompts/summary.md` (in `git status`); `v` shows "source: override"
+- [x] `$EDITOR` unset: `e` shows the in-modal editor; Enter adds a newline; `g`/`v`/`c` type letters; `ctrl+s` saves; `esc` cancels without closing the modal
+- [x] `g` uses the edited prompt; older summary shows "Generated with a different prompt"
+- [x] Empty save: warning, previous prompt kept. Text equal to default: override file removed
+- [x] `r` + confirm removes the override; source back to default
 ```
 
 ### Success Criteria:
@@ -1205,8 +1205,8 @@ editable. `e` opens `$VISUAL`/`$EDITOR` on the file; if neither is set it opens 
 - [x] Link audit: `python3 tools/syncLinks/sync.py --check` exits 0 (with the user's `links.json`)
 
 #### Manual Verification:
-- [ ] The README checklist items added in 4.4
-- [ ] Run with `VISUAL= EDITOR= opencode` to exercise the in-modal editor on a multi-line prompt
+- [x] The README checklist items added in 4.4
+- [x] Run with `VISUAL= EDITOR= opencode` to exercise the in-modal editor on a multi-line prompt
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 

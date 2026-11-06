@@ -29,23 +29,23 @@ link.
 
 ## Manual checklist
 
-- [ ] `/summary` in slash completion and palette; on home shows "Open a session first"
-- [ ] Empty state, then `g` shows summary + "Generated …"; persists after TUI restart
-- [ ] `c` copies the markdown
-- [ ] Footer: `summary up to date` after `g`; `summary 1 turn ago`, then `summary 2 turns ago` after messages
-- [ ] `!cmd` shell runs and assistant replies do not change the count
-- [ ] `g` then `esc`: footer spinner, then toast "Summary ready"; `g` mid-run shows "Already generating"
-- [ ] Switching sessions shows each session's own footer
-- [ ] Staged revert before the summary: summary stays; `g` works and the new summary's turn count is relative to the last visible message
-- [ ] Undo the revert: summary stays
-- [ ] Commit the revert (send a message): summary deleted, footer hidden
-- [ ] Revert removing only messages after the summary keeps it
-- [ ] Agent running: `g` -> "Agent is running - wait for it to finish"
-- [ ] Fork a summarized session: fork shows no summary; parent keeps its own
-- [ ] `e`/`r`/copy hints and keys only in their views (`e`,`r` in prompt view; `c` in summary view)
-- [ ] `v` shows the fixed guard line, the default prompt, "source: default (prompt.ts)"
-- [ ] `$EDITOR` set: `e` opens the editor; saving creates `prompts/summary.md` (in `git status`); `v` shows "source: override"
-- [ ] `$EDITOR` unset: `e` shows the in-modal editor; Enter adds a newline; `g`/`v`/`c` type letters; `ctrl+s` saves; `esc` cancels without closing the modal
-- [ ] `g` uses the edited prompt; older summary shows "Generated with a different prompt"
-- [ ] Empty save: warning, previous prompt kept. Text equal to default: override file removed
-- [ ] `r` + confirm removes the override; source back to default
+- [x] `/summary` in slash completion and palette; on home shows "Open a session first"
+- [x] Empty state, then `g` shows summary + "Generated …"; persists after TUI restart
+- [x] `c` copies the markdown
+- [x] Footer: `summary up to date` after `g`; `summary 1 turn ago`, then `summary 2 turns ago` after messages
+- [x] `!cmd` shell runs and assistant replies do not change the count
+- [x] `g` then `esc`: footer spinner, then toast "Summary ready"; `g` mid-run shows "Already generating"
+- [x] Switching sessions shows each session's own footer
+- [x] Staged revert before the summary: summary stays; `g` works and the new summary's turn count is relative to the last visible message
+- [x] Undo the revert: summary stays
+- [x] Commit the revert (send a message): summary deleted, footer hidden
+- [x] Revert removing only messages after the summary keeps it
+- [x] Agent running: `g` -> "Agent is running - wait for it to finish"
+- [x] Fork a summarized session: fork shows no summary; parent keeps its own
+- [x] `e`/`r`/copy hints and keys only in their views (`e`,`r` in prompt view; `c` in summary view)
+- [x] `v` shows the fixed guard line, the default prompt, "source: default (prompt.ts)"
+- [x] `$EDITOR` set: `e` opens the editor; saving creates `prompts/summary.md` (in `git status`); `v` shows "source: override"
+- [x] `$EDITOR` unset: `e` shows the in-modal editor; Enter adds a newline; `g`/`v`/`c` type letters; `ctrl+s` saves; `esc` cancels without closing the modal
+- [x] `g` uses the edited prompt; older summary shows "Generated with a different prompt"
+- [x] Empty save: warning, previous prompt kept. Text equal to default: override file removed
+- [x] `r` + confirm removes the override; source back to default
