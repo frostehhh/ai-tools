@@ -913,7 +913,7 @@ async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> 
 
 ### Changes Required:
 
-- [ ] 4.1 Prompt helpers
+- [x] 4.1 Prompt helpers
 
 **File**: `lib.ts`
 
@@ -940,7 +940,7 @@ export function promptPaths(metaUrl: string): { dir: string; override: string } 
 }
 ```
 
-- [ ] 4.2 Tests
+- [x] 4.2 Tests
 
 **File**: `lib.test.ts`
 
@@ -967,7 +967,7 @@ describe("prompt", () => {
 })
 ```
 
-- [ ] 4.3 File-backed prompt, view toggle, edit, reset
+- [x] 4.3 File-backed prompt, view toggle, edit, reset
 
 **File**: `tui.tsx`
 **Changes**:
