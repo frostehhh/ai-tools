@@ -472,9 +472,9 @@ link.
 
 ## Manual checklist
 
-- [ ] `/summary` in slash completion and palette; on home shows "Open a session first"
-- [ ] Empty state, then `g` shows summary + "Generated …"; persists after TUI restart
-- [ ] `c` copies the markdown
+- [x] `/summary` in slash completion and palette; on home shows "Open a session first"
+- [x] Empty state, then `g` shows summary + "Generated …"; persists after TUI restart
+- [x] `c` copies the markdown
 ````
 
 - [x] 1.6 Link entry
@@ -525,12 +525,12 @@ link.
 
 #### Manual Verification:
 - [x] User adds the group to `links.json` and runs `python3 tools/syncLinks/sync.py`, then `--check` (writes to `~`; user runs or approves)
-- [ ] Restart opencode: `/summary` is in slash completion and the palette; the TUI log shows no plugin load error
-- [ ] On the home screen, `/summary` shows the toast "Open a session first"
-- [ ] In a session with messages, the empty state shows; `g` shows "Generating…", then the summary with the TL;DR section and `Generated just now · …`
-- [ ] Restart the TUI: the summary is still shown
-- [ ] `c` copies; paste confirms the markdown
-- [ ] Edit a hint string in the repo's `tui.tsx`: the open TUI reloads the plugin without a restart (expected from `watch.ts:82-91`)
+- [x] Restart opencode: `/summary` is in slash completion and the palette; the TUI log shows no plugin load error
+- [x] On the home screen, `/summary` shows the toast "Open a session first"
+- [x] In a session with messages, the empty state shows; `g` shows "Generating…", then the summary with the TL;DR section and `Generated just now · …`
+- [x] Restart the TUI: the summary is still shown
+- [x] `c` copies; paste confirms the markdown
+- [x] Edit a hint string in the repo's `tui.tsx`: the open TUI reloads the plugin without a restart (expected from `watch.ts:82-91`)
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
