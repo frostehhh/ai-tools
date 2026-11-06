@@ -106,9 +106,14 @@ export default Plugin.define({
         ui.toast.show({ variant: "warning", message: "Nothing to summarize yet" })
         return false
       }
-      const result = await client.session
-        .generate({ sessionID, prompt: lib.buildRequest(prompt) })
+      // No abort signal on session.generate: race a timeout so a hung call cannot keep the session "in flight" forever.
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Summary timed out")), lib.GENERATE_TIMEOUT_MS)
+      })
+      const result = await Promise.race([client.session.generate({ sessionID, prompt: lib.buildRequest(prompt) }), timeout])
         .catch((cause: unknown) => (toastError(cause), undefined))
+        .finally(() => clearTimeout(timer))
       if (!result) return false
       if (lib.isBlank(result.text)) {
         ui.toast.show({ variant: "error", message: "Summary came back empty" })

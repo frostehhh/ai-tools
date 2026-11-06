@@ -55,6 +55,7 @@ export function datetime(ts: number): string {
 }
 
 export const TURN_LIMIT = 200
+export const GENERATE_TIMEOUT_MS = 180_000
 export type Turns = { count: number; capped: boolean }
 
 /** `userMessageIDs` = one page of user messages (newest first, at most `limit`). IDs sort as strings. */
