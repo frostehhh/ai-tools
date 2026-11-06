@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import * as lib from "./lib"
-import { GUARD } from "./prompt"
+import { DEFAULT_PROMPT, GUARD } from "./prompt"
 
 const record: lib.SummaryRecord = { text: "# hi", generatedAt: 1_000, promptId: "abcd1234", lastMessageID: "msg_01" }
 
@@ -105,5 +105,24 @@ describe("validity", () => {
     expect(lib.validityAction({ found: true })).toBe("keep")
     expect(lib.validityAction({ found: false, notFound: true })).toBe("delete")
     expect(lib.validityAction({ found: false, notFound: false })).toBe("keep")
+  })
+})
+
+describe("prompt", () => {
+  test("resolvePrompt", () => {
+    expect(lib.resolvePrompt(undefined)).toEqual({ text: DEFAULT_PROMPT, source: "default" })
+    expect(lib.resolvePrompt("  \n")).toEqual({ text: DEFAULT_PROMPT, source: "default" })
+    expect(lib.resolvePrompt(" Mine \n")).toEqual({ text: "Mine", source: "override" })
+  })
+  test("saveAction", () => {
+    expect(lib.saveAction("")).toBe("noop")
+    expect(lib.saveAction(`${DEFAULT_PROMPT}\n`)).toBe("delete")
+    expect(lib.saveAction("Mine")).toBe("write")
+  })
+  test("promptPaths", () => {
+    expect(lib.promptPaths("file:///x/opencode-summary/tui.tsx")).toEqual({
+      dir: "/x/opencode-summary",
+      override: "/x/opencode-summary/prompts/summary.md",
+    })
   })
 })

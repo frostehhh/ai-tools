@@ -1,4 +1,6 @@
-import { GUARD } from "./prompt"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import { DEFAULT_PROMPT, GUARD } from "./prompt"
 
 export const METADATA_KEY = "opencode-summary"
 export type Metadata = Record<string, unknown>
@@ -114,3 +116,19 @@ export function isMessageNotFound(error: unknown): boolean {
 export type ValidityCheck = { found: true } | { found: false; notFound: boolean }
 export const validityAction = (check: ValidityCheck): "keep" | "delete" =>
   !check.found && check.notFound ? "delete" : "keep"
+
+export type PromptSource = "default" | "override"
+export type ResolvedPrompt = { text: string; source: PromptSource }
+
+export const resolvePrompt = (override: string | undefined): ResolvedPrompt =>
+  isBlank(override) ? { text: DEFAULT_PROMPT, source: "default" } : { text: override!.trim(), source: "override" }
+
+export function saveAction(edited: string): "noop" | "delete" | "write" {
+  if (isBlank(edited)) return "noop"
+  return edited.trim() === DEFAULT_PROMPT.trim() ? "delete" : "write"
+}
+
+export function promptPaths(metaUrl: string): { dir: string; override: string } {
+  const dir = path.dirname(fileURLToPath(metaUrl))
+  return { dir, override: path.join(dir, "prompts", "summary.md") }
+}

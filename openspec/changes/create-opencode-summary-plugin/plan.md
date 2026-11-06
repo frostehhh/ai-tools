@@ -1174,7 +1174,7 @@ The prompt view replaces the summary body when `mode() === "prompt"`:
  }
 ```
 
-- [ ] 4.4 README prompt section and checklist
+- [x] 4.4 README prompt section and checklist
 
 **File**: `README.md` (plugin)
 **Changes**: add a "Prompt" section and checklist items. Update "Use" keys to `g v e r c`.
@@ -1200,9 +1200,9 @@ editable. `e` opens `$VISUAL`/`$EDITOR` on the file; if neither is set it opens 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Tests pass: `cd src/opencode-plugins/opencode-summary && bun test`
-- [ ] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts prompt.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
-- [ ] Link audit: `python3 tools/syncLinks/sync.py --check` exits 0 (with the user's `links.json`)
+- [x] Tests pass: `cd src/opencode-plugins/opencode-summary && bun test`
+- [x] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts prompt.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
+- [x] Link audit: `python3 tools/syncLinks/sync.py --check` exits 0 (with the user's `links.json`)
 
 #### Manual Verification:
 - [ ] The README checklist items added in 4.4

@@ -12,8 +12,15 @@ TUI plugin for opencode V2. `/summary` opens a modal that generates and shows a 
 
 ## Use
 
-`/summary` (or the palette, "Session summary") in a session. Keys: `g` generate, `c` copy, `j/k ↑/↓` scroll, `esc` close.
+`/summary` (or the palette, "Session summary") in a session. Keys: `g` generate, `v` view prompt, `e` edit prompt, `r` reset prompt, `c` copy, `j/k ↑/↓` scroll, `esc` close.
 Bind a global key with `cli.json` `keybinds`: `{"summary.open": "<key>"}`.
+
+## Prompt
+
+The default prompt is in `prompt.ts`. Your prompt lives in `prompts/summary.md` next to `tui.tsx`. Through the link this
+is the repo copy, so edits show up in `git status`. A fixed line forbidding tool calls is always prepended and is not
+editable. `e` opens `$VISUAL`/`$EDITOR` on the file; if neither is set it opens a multi-line editor in the modal
+(`ctrl+s` save, `esc` cancel). `r` deletes the override.
 
 ## Develop
 
@@ -35,3 +42,9 @@ link.
 - [ ] Revert removing only messages after the summary keeps it
 - [ ] Agent running: `g` -> "Agent is running - wait for it to finish"
 - [ ] Fork a summarized session: fork shows no summary; parent keeps its own
+- [ ] `v` shows the fixed guard line, the default prompt, "source: default (prompt.ts)"
+- [ ] `$EDITOR` set: `e` opens the editor; saving creates `prompts/summary.md` (in `git status`); `v` shows "source: override"
+- [ ] `$EDITOR` unset: `e` shows the in-modal editor; Enter adds a newline; `g`/`v`/`c` type letters; `ctrl+s` saves; `esc` cancels without closing the modal
+- [ ] `g` uses the edited prompt; older summary shows "Generated with a different prompt"
+- [ ] Empty save: warning, previous prompt kept. Text equal to default: override file removed
+- [ ] `r` + confirm removes the override; source back to default
