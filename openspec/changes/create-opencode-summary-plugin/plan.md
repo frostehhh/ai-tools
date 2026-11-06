@@ -728,10 +728,10 @@ ui.slot({ append: "prompt.footer.status", render: (props) => <FooterStatus sessi
 **Changes**: append to "Manual checklist".
 
 ```markdown
-- [ ] Footer: `summary up to date` after `g`; `summary 1 turn ago`, then `summary 2 turns ago` after messages
-- [ ] `!cmd` shell runs and assistant replies do not change the count
-- [ ] `g` then `esc`: footer spinner, then toast "Summary ready"; `g` mid-run shows "Already generating"
-- [ ] Switching sessions shows each session's own footer
+- [x] Footer: `summary up to date` after `g`; `summary 1 turn ago`, then `summary 2 turns ago` after messages
+- [x] `!cmd` shell runs and assistant replies do not change the count
+- [x] `g` then `esc`: footer spinner, then toast "Summary ready"; `g` mid-run shows "Already generating"
+- [x] Switching sessions shows each session's own footer
 ```
 
 ### Success Criteria:
@@ -741,8 +741,8 @@ ui.slot({ append: "prompt.footer.status", render: (props) => <FooterStatus sessi
 - [x] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
 
 #### Manual Verification:
-- [ ] The README checklist items added in 2.4
-- [ ] The modal line reads `Generated … · N turns ago` and updates while open when a message is sent
+- [x] The README checklist items added in 2.4
+- [x] The modal line reads `Generated … · N turns ago` and updates while open when a message is sent
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
@@ -755,7 +755,7 @@ Read-time deletion when `lastMessageID` is gone (committed revert, fork, child).
 
 ### Changes Required:
 
-- [ ] 3.1 Decision helpers
+- [x] 3.1 Decision helpers
 
 **File**: `lib.ts`
 
@@ -787,7 +787,7 @@ export type ValidityCheck = { found: true } | { found: false; notFound: boolean 
 export const validityAction = (check: ValidityCheck): "keep" | "delete" => (!check.found && check.notFound ? "delete" : "keep")
 ```
 
-- [ ] 3.2 Tests
+- [x] 3.2 Tests
 
 **File**: `lib.test.ts`
 
@@ -820,7 +820,7 @@ describe("validity", () => {
 })
 ```
 
-- [ ] 3.3 Validity in load, guards in generate
+- [x] 3.3 Validity in load, guards in generate
 
 **File**: `tui.tsx`
 **Changes**:
@@ -874,7 +874,7 @@ async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> 
 
 `loadView` already calls `loadSummary`, so the footer and the modal both apply the rule. The deletion write emits `session.metadata.updated`, then a refresh, which finds no record and stops there (no loop).
 
-- [ ] 3.4 README checklist
+- [x] 3.4 README checklist
 
 **File**: `README.md` (plugin)
 
@@ -890,8 +890,8 @@ async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Tests pass: `cd src/opencode-plugins/opencode-summary && bun test`
-- [ ] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
+- [x] Tests pass: `cd src/opencode-plugins/opencode-summary && bun test`
+- [x] Syntax: `cd src/opencode-plugins/opencode-summary && for f in tui.tsx lib.ts; do bun build --no-bundle "$f" > /dev/null || exit 1; done`
 
 #### Manual Verification:
 - [ ] The README checklist items added in 3.4

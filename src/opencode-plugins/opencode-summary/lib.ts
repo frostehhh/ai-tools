@@ -81,3 +81,37 @@ export function errorMessage(cause: unknown): string {
   if (cause instanceof Error && cause.message) return cause.message
   return typeof cause === "string" && cause ? cause : "Unknown error"
 }
+
+export type BlockReason = "running" | "revert-pending" | "in-flight"
+
+export function blockReason(input: {
+  status: "idle" | "running"
+  revertStaged: boolean
+  inFlight: boolean
+}): BlockReason | undefined {
+  if (input.inFlight) return "in-flight"
+  if (input.status === "running") return "running"
+  if (input.revertStaged) return "revert-pending"
+  return undefined
+}
+
+export function blockMessage(reason: BlockReason): string {
+  switch (reason) {
+    case "in-flight":
+      return "Already generating"
+    case "running":
+      return "Agent is running - wait for it to finish"
+    case "revert-pending":
+      return "Revert pending - send a message or undo first"
+  }
+}
+
+export function isMessageNotFound(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false
+  const { _tag, name } = error as { _tag?: unknown; name?: unknown }
+  return _tag === "MessageNotFoundError" || name === "MessageNotFoundError"
+}
+
+export type ValidityCheck = { found: true } | { found: false; notFound: boolean }
+export const validityAction = (check: ValidityCheck): "keep" | "delete" =>
+  !check.found && check.notFound ? "delete" : "keep"

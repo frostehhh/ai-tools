@@ -75,3 +75,30 @@ describe("turns", () => {
     expect(lib.generatedLine(record, record.generatedAt, { count: 3, capped: false })).toMatch(/ · 3 turns ago$/)
   })
 })
+
+describe("guards", () => {
+  test("blockReason precedence", () => {
+    expect(lib.blockReason({ status: "idle", revertStaged: false, inFlight: false })).toBeUndefined()
+    expect(lib.blockReason({ status: "running", revertStaged: true, inFlight: false })).toBe("running")
+    expect(lib.blockReason({ status: "idle", revertStaged: true, inFlight: false })).toBe("revert-pending")
+    expect(lib.blockReason({ status: "running", revertStaged: true, inFlight: true })).toBe("in-flight")
+  })
+  test("blockMessage", () => {
+    expect(lib.blockMessage("revert-pending")).toBe("Revert pending - send a message or undo first")
+  })
+})
+
+describe("validity", () => {
+  test("isMessageNotFound matches client-declared errors", () => {
+    const declared = Object.assign(new Error("gone"), { _tag: "MessageNotFoundError" })
+    declared.name = "MessageNotFoundError"
+    expect(lib.isMessageNotFound(declared)).toBe(true)
+    expect(lib.isMessageNotFound(new Error("Transport"))).toBe(false)
+    expect(lib.isMessageNotFound(undefined)).toBe(false)
+  })
+  test("validityAction", () => {
+    expect(lib.validityAction({ found: true })).toBe("keep")
+    expect(lib.validityAction({ found: false, notFound: true })).toBe("delete")
+    expect(lib.validityAction({ found: false, notFound: false })).toBe("keep")
+  })
+})

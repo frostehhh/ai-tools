@@ -29,3 +29,9 @@ link.
 - [ ] `!cmd` shell runs and assistant replies do not change the count
 - [ ] `g` then `esc`: footer spinner, then toast "Summary ready"; `g` mid-run shows "Already generating"
 - [ ] Switching sessions shows each session's own footer
+- [ ] Staged revert before the summary: summary stays; `g` -> "Revert pending - send a message or undo first"
+- [ ] Undo the revert: summary stays; `g` works
+- [ ] Commit the revert (send a message): summary deleted, footer hidden
+- [ ] Revert removing only messages after the summary keeps it
+- [ ] Agent running: `g` -> "Agent is running - wait for it to finish"
+- [ ] Fork a summarized session: fork shows no summary; parent keeps its own

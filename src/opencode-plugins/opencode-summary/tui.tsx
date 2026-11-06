@@ -39,7 +39,26 @@ export default Plugin.define({
     }
 
     async function loadSummary(sessionID: string): Promise<lib.SummaryRecord | undefined> {
-      return lib.readSummary(await readMetadata(sessionID))
+      const record = lib.readSummary(await readMetadata(sessionID))
+      if (!record) return undefined
+      const check: lib.ValidityCheck = await client.session.message
+        .get({ sessionID, messageID: record.lastMessageID })
+        .then(
+          () => ({ found: true }) as const,
+          (error: unknown) => ({ found: false, notFound: lib.isMessageNotFound(error) }) as const,
+        )
+      if (lib.validityAction(check) === "keep") return record
+      await writeSummary(sessionID, undefined)
+      return undefined
+    }
+
+    async function blocked(sessionID: string): Promise<lib.BlockReason | undefined> {
+      const info = await client.session.get({ sessionID })
+      return lib.blockReason({
+        status: context.data.session.status(sessionID),
+        revertStaged: Boolean(info.revert),
+        inFlight: inFlight(sessionID),
+      })
     }
 
     const [tick, setTick] = createSignal(0)
@@ -102,7 +121,8 @@ export default Plugin.define({
     }
 
     async function startGenerate(sessionID: string): Promise<void> {
-      if (inFlight(sessionID)) return void ui.toast.show({ variant: "warning", message: "Already generating" })
+      const reason = await blocked(sessionID)
+      if (reason) return void ui.toast.show({ variant: "warning", message: lib.blockMessage(reason) })
       setFlight((draft) => void draft.sessions.push(sessionID))
       try {
         const written = await generate(sessionID)
@@ -155,6 +175,7 @@ export default Plugin.define({
       const dimensions = useTerminalDimensions()
       const maxHeight = createMemo(() => Math.max(8, Math.floor(dimensions().height * 0.6)))
       const [view] = createResource(() => [props.sessionID, tick()] as const, ([id]) => loadView(id).catch(toastError))
+      const [reason] = createResource(() => [props.sessionID, tick()] as const, ([id]) => blocked(id).catch(() => undefined))
       const record = () => view()?.record
       const busy = () => inFlight(props.sessionID)
       let scroll: ScrollBoxRenderable | undefined
@@ -206,7 +227,7 @@ export default Plugin.define({
               </scrollbox>
             )}
           </Show>
-          <Hints items={[["generate", "g"], ["copy", "c"], ["scroll", "j/k ↑/↓"]]} />
+          <Hints items={[[reason() ? `generate (${reason()})` : "generate", "g"], ["copy", "c"], ["scroll", "j/k ↑/↓"]]} />
         </box>
       )
     }
