@@ -420,7 +420,7 @@ export default Plugin.define({
           commands: [
             {
               id: "summary.open",
-              title: "Session summary",
+              title: "View or generate session summary",
               description: "View or generate a summary of this session",
               group: "Summary",
               palette: true,

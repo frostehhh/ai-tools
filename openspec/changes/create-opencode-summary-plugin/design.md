@@ -463,7 +463,7 @@ One keymap-layer entry registers slash, palette and keybind; use `mode: "global"
 ```js
 context.keymap.layer(() => ({
   mode: "global",
-  commands: [{ id: "summary.open", title: "Session summary", group: "Summary",
+  commands: [{ id: "summary.open", title: "View or generate session summary", group: "Summary",
                palette: true, slash: { name: "summary" }, run: openModal }],
 }))
 ```
