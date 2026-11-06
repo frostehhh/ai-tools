@@ -316,8 +316,18 @@ export default Plugin.define({
         enabled: mode() !== "edit",
         commands: [
           { bind: "g", title: "Generate summary", group: "Dialog", run },
-          { bind: "c", title: "Copy summary", group: "Dialog", run: copy },
           { bind: "v", title: "Toggle prompt view", group: "Dialog", run: () => setMode((m) => (m === "summary" ? "prompt" : "summary")) },
+        ],
+      }))
+      context.keymap.layer(() => ({
+        mode: "modal",
+        enabled: mode() === "summary",
+        commands: [{ bind: "c", title: "Copy summary", group: "Dialog", run: copy }],
+      }))
+      context.keymap.layer(() => ({
+        mode: "modal",
+        enabled: mode() === "prompt",
+        commands: [
           { bind: "e", title: "Edit prompt", group: "Dialog", run: edit },
           { bind: "r", title: "Reset prompt", group: "Dialog", run: () => void resetPrompt(props.sessionID).catch(toastError) },
         ],
@@ -386,9 +396,8 @@ export default Plugin.define({
               items={[
                 [reason() ? `generate (${reason()})` : "generate", "g"],
                 [mode() === "summary" ? "prompt" : "summary", "v"],
-                ["edit", "e"],
-                ["reset", "r"],
-                ["copy", "c"],
+                ...(mode() === "prompt" ? ([["edit", "e"], ["reset", "r"]] as [string, string][]) : []),
+                ...(mode() === "summary" ? ([["copy", "c"]] as [string, string][]) : []),
                 ["scroll", "j/k"],
               ]}
             />
