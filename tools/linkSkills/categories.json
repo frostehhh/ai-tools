@@ -4,6 +4,14 @@
   "categories": {
     "frontend": [
       "angular-developer"
+    ],
+    "obsidian": [
+      "defuddle",
+      "json-canvas",
+      "obsidian-bases",
+      "obsidian-cli",
+      "obsidian-markdown",
+      "obsidian-quickadd"
     ]
   }
 }
