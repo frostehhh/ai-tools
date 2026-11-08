@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["json5>=0.9"]
+# ///
 """
 Create / repair / audit the links and copies listed in links.json (repo root).
 
@@ -23,7 +27,7 @@ left alone with a warning.
 
 Legacy keys `type` and `mode` ("link" | "perFile") are still read, with a warning.
 
-links.json may contain // and /* */ comments.
+links.json may contain comments (JSONC); it is read with the json5 package.
 
 Never recurses into links. Stale links are reported by --check only if they are
 declared; extras are ignored.
@@ -35,7 +39,6 @@ Symlinks require an elevated shell or Developer Mode on Windows.
 import argparse
 import fnmatch
 import hashlib
-import json
 import os
 import shutil
 import stat
@@ -43,46 +46,24 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import json5
+except ImportError:
+    sys.exit(
+        "ERROR: the json5 package is required to read links.json.\n"
+        "Run this tool with `uv run tools/syncLinks/sync.py ...`, or install it with\n"
+        "`pip install -r tools/syncLinks/requirements.txt`."
+    )
+
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def strip_comments(text: str) -> str:
-    """Remove // and /* */ comments, leaving string contents untouched."""
-    out: list[str] = []
-    i, n = 0, len(text)
-    in_str = False
-    while i < n:
-        c = text[i]
-        if in_str:
-            out.append(c)
-            if c == "\\" and i + 1 < n:
-                out.append(text[i + 1])
-                i += 2
-                continue
-            if c == '"':
-                in_str = False
-            i += 1
-        elif c == '"':
-            in_str = True
-            out.append(c)
-            i += 1
-        elif c == "/" and i + 1 < n and text[i + 1] == "/":
-            while i < n and text[i] != "\n":
-                i += 1
-        elif c == "/" and i + 1 < n and text[i + 1] == "*":
-            end = text.find("*/", i + 2)
-            i = n if end == -1 else end + 2
-        else:
-            out.append(c)
-            i += 1
-    return "".join(out)
-
-
 def load_config(config_path: Path) -> dict:
+    """Read links.json. json5 accepts comments (JSONC) and is a superset of JSON."""
     with open(config_path, "r", encoding="utf-8") as f:
-        return json.loads(strip_comments(f.read()))
+        return json5.load(f)
 
 
 def expand_vars(s: str, vars_dict: dict, max_depth: int = 5) -> str:

@@ -9,7 +9,7 @@ description: Create, repair and audit every link from this repo to its consumers
 
 ## Run
 
-From the repo root:
+From the repo root. The script needs the `json5` package: use `uv run` in place of `python` (it fetches it), or run `pip install -r tools/syncLinks/requirements.txt` once.
 
 ```
 python tools/syncLinks/sync.py                 # create missing / fix wrong links

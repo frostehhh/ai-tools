@@ -15,7 +15,7 @@ flowchart LR
 
 ## Configuring `links.json`
 
-`links.json` is not tracked in git. Copy the example and customize it for your machine. `links.json` may contain `//` and `/* */` comments, and `links.example.jsonc` documents every field inline:
+`links.json` is not tracked in git. Copy the example and customize it for your machine. `links.json` may contain line (`//`) and block comments, and `links.example.jsonc` documents every field inline. Because `links.json` has a `.json` extension, keep the mode line `// -*- mode: jsonc -*-` as its first line (the example already has it) so editors treat it as [JSONC](https://jsonc.org). The file is read with the [`json5`](https://pypi.org/project/json5/) package, which is a superset of JSONC (it also accepts trailing commas and unquoted keys). Write standard JSONC, with block comments that do not nest and no trailing commas, so editors and other tools can still read it:
 
 ```bash
 cp links.example.jsonc links.json
@@ -119,6 +119,14 @@ Use `copy` where a link would break, for example a repo that other people clone.
 ```
 
 ## Usage
+
+The only dependency is `json5`, declared in the script's header and in `requirements.txt`. Easiest is [`uv`](https://docs.astral.sh/uv/), which fetches it on demand:
+
+```bash
+uv run tools/syncLinks/sync.py --check
+```
+
+With plain `python`, install it once (`pip install -r tools/syncLinks/requirements.txt`). Without it the script exits with an error message that says so. The examples below use `python`; prefix with `uv run` instead if you prefer.
 
 ```bash
 python tools/syncLinks/sync.py              # create missing / fix wrong links, refresh copies
