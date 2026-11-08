@@ -1,16 +1,29 @@
 #!/usr/bin/env python3
 """
-Create / repair / audit the links listed in links.json (repo root).
+Create / repair / audit the links and copies listed in links.json (repo root).
 
-For every entry in links.json: expands ${vars}, then ensures `link` points at `target`.
+Each entry has two independent axes plus one option:
+- method   "link" (default) | "copy"      what to make at `link`
+- scope    "folder" (default) | "items"   "folder": `link` itself is the unit;
+                                          "items": `link` stays a real folder and each
+                                          child of `target` matching include/exclude is
+                                          the unit
+- linkType "symlink" (default) | "junction"  how a link is made (method "link" only)
+
+method "link":
 - missing link        -> created (parent folders created)
 - wrong-target link   -> removed (link only) and recreated
 - empty real folder   -> removed and replaced by the link
 - non-empty real path -> warning, left alone
 - target missing      -> warning, skipped
 
-mode "perFile" links each item of `target` matching `include` (and not `exclude`)
-into the `link` folder.
+method "copy": `link` becomes a real copy of `target`. Differing files are overwritten,
+files that only exist in the copy are removed. .DS_Store is ignored. A link in the way is
+left alone with a warning.
+
+Legacy keys `type` and `mode` ("link" | "perFile") are still read, with a warning.
+
+links.json may contain // and /* */ comments.
 
 Never recurses into links. Stale links are reported by --check only if they are
 declared; extras are ignored.
@@ -21,8 +34,10 @@ Symlinks require an elevated shell or Developer Mode on Windows.
 
 import argparse
 import fnmatch
+import hashlib
 import json
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -33,9 +48,41 @@ from pathlib import Path
 # Helpers
 # ---------------------------------------------------------------------------
 
+def strip_comments(text: str) -> str:
+    """Remove // and /* */ comments, leaving string contents untouched."""
+    out: list[str] = []
+    i, n = 0, len(text)
+    in_str = False
+    while i < n:
+        c = text[i]
+        if in_str:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(text[i + 1])
+                i += 2
+                continue
+            if c == '"':
+                in_str = False
+            i += 1
+        elif c == '"':
+            in_str = True
+            out.append(c)
+            i += 1
+        elif c == "/" and i + 1 < n and text[i + 1] == "/":
+            while i < n and text[i] != "\n":
+                i += 1
+        elif c == "/" and i + 1 < n and text[i + 1] == "*":
+            end = text.find("*/", i + 2)
+            i = n if end == -1 else end + 2
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
 def load_config(config_path: Path) -> dict:
     with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        return json.loads(strip_comments(f.read()))
 
 
 def expand_vars(s: str, vars_dict: dict, max_depth: int = 5) -> str:
@@ -193,40 +240,157 @@ def ensure_link(
     return True
 
 
-def ensure_perfile(
-    link_dir: Path,
-    target_dir: Path,
-    include_patterns: list[str],
-    exclude_patterns: list[str],
-    link_type: str,
+COPY_IGNORE = {".DS_Store"}
+VALID_METHODS = ("link", "copy")
+VALID_SCOPES = ("folder", "items")
+VALID_LINK_TYPES = ("symlink", "junction")
+
+
+def file_digest(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def tree_digest(root: Path) -> dict[str, str]:
+    """Map relative file path -> sha256 for every file under root (ignoring COPY_IGNORE)."""
+    result: dict[str, str] = {}
+    if root.is_file():
+        return {"": file_digest(root)}
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in COPY_IGNORE]
+        for name in filenames:
+            if name in COPY_IGNORE:
+                continue
+            full = Path(dirpath) / name
+            result[str(full.relative_to(root))] = file_digest(full)
+    return result
+
+
+def ensure_copy(
+    link: Path,
+    target: Path,
     *,
     check_only: bool = False,
     dry_run: bool = False,
-) -> list[bool]:
-    """Ensure per-file links in link_dir from target_dir."""
-    if not target_dir.exists():
-        print(f"WARNING: target dir missing: {target_dir}")
-        return [False]
+) -> bool:
+    """
+    Ensure `link` is a real copy of `target`. Returns True if already identical.
+    Only files inside `link` are touched; a link in the way is never followed or removed.
+    """
+    if not target.exists():
+        print(f"WARNING: target missing, skipped: {link} -> {target}")
+        return False
+    if is_link(link):
+        print(f"WARNING: link in the way of a copy, left alone: {link}")
+        return False
+    if link.exists() and link.is_dir() != target.is_dir():
+        print(f"WARNING: file/folder mismatch, left alone: {link}")
+        return False
 
-    results: list[bool] = []
-    for item in target_dir.iterdir():
+    src = tree_digest(target)
+    dst = tree_digest(link) if link.exists() else {}
+
+    to_copy = [k for k, v in src.items() if dst.get(k) != v]
+    to_delete = [k for k in dst if k not in src]
+
+    if not link.exists():
+        state = "missing"
+    elif to_copy or to_delete:
+        state = "drift"
+    else:
+        print(f"\033[90mok       {link}\033[0m")
+        return True
+
+    detail = f"({len(to_copy)} to copy, {len(to_delete)} to remove)" if state == "drift" else ""
+    print(f"{state:<8} {link} {detail}".strip())
+
+    if check_only or dry_run:
+        return False
+
+    try:
+        if target.is_file():
+            link.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(target, link)
+        else:
+            link.mkdir(parents=True, exist_ok=True)
+            for rel in to_copy:
+                dest = link / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(target / rel, dest)
+            for rel in to_delete:
+                (link / rel).unlink()
+            # Remove empty directories that no longer exist in the source
+            for dirpath, _dirs, _files in os.walk(link, topdown=False):
+                d = Path(dirpath)
+                if d != link and not any(d.iterdir()) and not (target / d.relative_to(link)).exists():
+                    d.rmdir()
+        print(f"\033[32mcopied   {link}\033[0m")
+    except Exception as e:
+        print(f"WARNING: failed to copy {link}: {e}")
+        return False
+    return True
+
+
+def resolve_entry(entry: dict) -> tuple[str, str, str] | None:
+    """Return (method, scope, link_type) with defaults applied, or None if invalid."""
+    where = entry.get("link", "?")
+    method = entry.get("method")
+    scope = entry.get("scope")
+    link_type = entry.get("linkType")
+
+    # Legacy keys
+    if "type" in entry:
+        print(f"WARNING: 'type' is deprecated, use 'linkType': {where}")
+        link_type = link_type or entry["type"]
+    if "mode" in entry:
+        print(f"WARNING: 'mode' is deprecated, use 'method' and 'scope': {where}")
+        legacy = entry["mode"]
+        if legacy == "perFile":
+            scope = scope or "items"
+        elif legacy != "link":
+            print(f"ERROR: unknown mode '{legacy}': {where}")
+            return None
+
+    method = method or "link"
+    scope = scope or "folder"
+    if method not in VALID_METHODS:
+        print(f"ERROR: method must be one of {VALID_METHODS}, got '{method}': {where}")
+        return None
+    if scope not in VALID_SCOPES:
+        print(f"ERROR: scope must be one of {VALID_SCOPES}, got '{scope}': {where}")
+        return None
+    if link_type is not None and link_type not in VALID_LINK_TYPES:
+        print(f"ERROR: linkType must be one of {VALID_LINK_TYPES}, got '{link_type}': {where}")
+        return None
+    if method == "copy" and link_type is not None:
+        print(f"WARNING: linkType is ignored with method 'copy': {where}")
+    if scope == "folder" and ("include" in entry or "exclude" in entry):
+        print(f"WARNING: include/exclude are ignored with scope 'folder': {where}")
+    return method, scope, link_type or "symlink"
+
+
+def expand_items(
+    link: Path,
+    target: Path,
+    include_patterns: list[str],
+    exclude_patterns: list[str],
+) -> list[tuple[Path, Path]] | None:
+    """(link, target) pairs for scope 'items'. None if target dir is missing."""
+    if not target.exists():
+        print(f"WARNING: target dir missing: {target}")
+        return None
+    pairs = []
+    for item in sorted(target.iterdir()):
         name = item.name
-
-        if include_patterns and not any(
-            fnmatch.fnmatch(name, p) for p in include_patterns
-        ):
+        if include_patterns and not any(fnmatch.fnmatch(name, p) for p in include_patterns):
             continue
-        if exclude_patterns and any(
-            fnmatch.fnmatch(name, p) for p in exclude_patterns
-        ):
+        if exclude_patterns and any(fnmatch.fnmatch(name, p) for p in exclude_patterns):
             continue
-
-        link_path = link_dir / name
-        results.append(
-            ensure_link(link_path, item, link_type, check_only=check_only, dry_run=dry_run)
-        )
-
-    return results
+        pairs.append((link / name, item))
+    return pairs
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +431,7 @@ def main() -> int:
         config_path = repo_root / args.config
         if not config_path.exists():
             print(f"ERROR: Config file not found: {args.config}")
-            print("Copy links.example.json to links.json and customize it for your machine.")
+            print("Copy links.example.jsonc to links.json and customize it for your machine.")
             return 1
 
     cfg = load_config(config_path)
@@ -294,37 +458,51 @@ def main() -> int:
         for link_entry in group_data.get("links", []):
             link_raw = link_entry["link"]
             target_raw = link_entry["target"]
-            link_type = link_entry.get("type", "symlink")
+
+            resolved = resolve_entry(link_entry)
+            if resolved is None:
+                bad_count += 1
+                continue
+            method, scope, link_type = resolved
 
             link = Path(expand_vars(link_raw, expanded_vars))
             target = Path(expand_vars(target_raw, expanded_vars))
 
-            mode = link_entry.get("mode", "link")
-            if mode == "perFile":
-                include = link_entry.get("include", ["*"])
-                exclude = link_entry.get("exclude", [])
-                results = ensure_perfile(
+            if scope == "items":
+                pairs = expand_items(
                     link,
                     target,
-                    include,
-                    exclude,
-                    link_type,
-                    check_only=args.check,
-                    dry_run=args.dry_run,
+                    link_entry.get("include", ["*"]),
+                    link_entry.get("exclude", []),
                 )
-                bad_count += sum(1 for r in results if not r)
+                if pairs is None:
+                    bad_count += 1
+                    continue
             else:
-                if not ensure_link(
-                    link, target, link_type, check_only=args.check, dry_run=args.dry_run
-                ):
+                pairs = [(link, target)]
+
+            for pair_link, pair_target in pairs:
+                if method == "copy":
+                    ok = ensure_copy(
+                        pair_link, pair_target, check_only=args.check, dry_run=args.dry_run
+                    )
+                else:
+                    ok = ensure_link(
+                        pair_link,
+                        pair_target,
+                        link_type,
+                        check_only=args.check,
+                        dry_run=args.dry_run,
+                    )
+                if not ok:
                     bad_count += 1
 
     if bad_count > 0:
-        print(f"\033[33m{bad_count} link(s) not in desired state\033[0m")
+        print(f"\033[33m{bad_count} item(s) not in desired state\033[0m")
         if args.check:
             return 1
     else:
-        print("\033[32mall links ok\033[0m")
+        print("\033[32mall links and copies ok\033[0m")
 
     return 0
 

@@ -21,7 +21,7 @@ ai-tools/
 │   ├── linkSkills/        # sync.py + categories.json: .agents/skills → generated skill links
 │   ├── syncLinks/         # sync.py + links.json consumer: create / repair / audit links
 │   └── herdr-plugins/     # local Herdr plugins (machine-specific)
-├── links.example.json     # example link configuration (copy to links.json)
+├── links.example.jsonc    # example link configuration, documented inline (copy to links.json)
 ├── links.json             # consumer-specific link map (gitignored)
 └── AGENTS.md              # repo-specific instructions
 ```
