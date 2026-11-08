@@ -6,6 +6,13 @@
       "sourceType": "github",
       "skillPath": "SKILL.md",
       "computedHash": "49f12047d16a2c7c0342e669b576d0d6c90e083aa762017735ade80c9d9077ec"
+    },
+    "herdr": {
+      "source": "herdrdev/herdr",
+      "sourceType": "github",
+      "skillPath": "skills/herdr/SKILL.md",
+      "computedHash": "72177e911f55467de8737174072ec6bb08e30bbf62bceabcb69678e944398b18",
+      "installMode": "copy"
     }
   }
 }
