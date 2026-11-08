@@ -1,26 +1,46 @@
-// Example links configuration for tools/syncLinks/sync.py.
-//
-// Copy this file to links.json (gitignored) and edit the paths for your machine:
-//   cp links.example.jsonc links.json
-// Comments are allowed in links.json as well.
-// Audit your setup with: python tools/syncLinks/sync.py --check
-//
-// Generated skill junctions inside src (src/skills/<category>) belong to
-// tools/linkSkills/sync.py and are not listed here.
+// -*- mode: jsonc -*-
+/*
+ * Example links configuration for tools/syncLinks/sync.py.
+ *
+ * Copy this file to links.json (gitignored) and edit the paths for your machine:
+ *
+ *   cp links.example.jsonc links.json
+ *
+ * links.json may contain line and block comments. Keep the mode line above as
+ * the first line so editors treat the .json file as JSONC.
+ *
+ * Rules for this format (https://jsonc.org):
+ *   - Comments cannot be nested, and a block comment ends at the first
+ *     closing marker, so never write that marker inside a comment.
+ *   - Trailing commas are not allowed.
+ *
+ * Audit your setup with:
+ *
+ *   python tools/syncLinks/sync.py --check
+ *
+ * Generated skill junctions inside src (src/skills/<category>) belong to
+ * tools/linkSkills/sync.py and are not listed here.
+ */
 {
-  // Reusable path fragments. Use them as ${name} in "link" and "target".
-  // Variables may reference each other (expanded up to 5 levels).
+  /*
+   * Reusable path fragments. Use them as ${name} in "link" and "target".
+   * Variables may reference each other (expanded up to 5 levels).
+   *
+   * Built-in variables, always available without being declared:
+   *   ${self} = directory containing links.json (the repo root)
+   *   ${home} = your home directory (~ on macOS/Linux, %USERPROFILE% on Windows)
+   */
   "vars": {
-    // Built-in variables, always available:
-    //   ${self} = directory containing links.json (the repo root)
-    //   ${home} = your home directory (~ on macOS/Linux, %USERPROFILE% on Windows)
     "repo": "${self}",
     "src": "${repo}/src",
     "home": "${home}"
   },
 
-  // A group is a named set of entries. Run only some with `--group <name>` (repeatable).
-  // With no --group, every group runs.
+  /*
+   * A group is a named set of entries.
+   * Run only some groups with `--group <name>` (repeatable).
+   * With no --group, every group runs.
+   */
   "groups": {
 
     // 1. One symlink for a whole folder.
@@ -30,27 +50,38 @@
           // Required. Path that must exist after sync. Parent folders are created.
           "link": "${home}/.config/some-tool/skills",
 
-          // Required. What "link" points to or copies from. A missing target is skipped with a warning.
+          // Required. What "link" points to or copies from.
+          // A missing target is skipped with a warning.
           "target": "${src}/skills",
 
-          // "method" - what to do. Optional, default "link".
-          //   "link" - make a symlink or junction pointing at the target.
-          //   "copy" - copy the target's files; the result is real files, not a link.
-          //            Re-running overwrites differing files and removes extra files
-          //            inside the copy, so edit the source, not the copy.
+          /*
+           * "method" - what to make at "link". Optional, default "link".
+           *
+           *   "link" - a symlink or junction pointing at the target.
+           *   "copy" - a real copy of the target's files, not a link.
+           *            Re-running overwrites differing files and removes extra
+           *            files inside the copy, so edit the source, not the copy.
+           */
           "method": "link",
 
-          // "scope" - which unit to process. Optional, default "folder".
-          //   "folder" - "link" itself is the one link (or copy) of "target".
-          //   "items"  - "link" stays a real folder; each child of "target" matching
-          //              "include" (and not "exclude") is linked or copied into it.
+          /*
+           * "scope" - which unit to process. Optional, default "folder".
+           *
+           *   "folder" - "link" itself is the one link (or copy) of "target".
+           *   "items"  - "link" stays a real folder; each child of "target"
+           *              matching "include" (and not "exclude") is linked or
+           *              copied into it.
+           */
           "scope": "folder",
 
-          // "linkType" - how a link is made. Optional, default "symlink".
-          // Only used with method "link"; ignored (with a warning) for "copy".
-          //   "symlink"  - symbolic link. Windows needs admin or Developer Mode.
-          //   "junction" - Windows directory junction, no admin needed, directories
-          //                only. On macOS/Linux it falls back to a symlink.
+          /*
+           * "linkType" - how a link is physically made. Optional, default "symlink".
+           * Only used with method "link"; ignored (with a warning) for "copy".
+           *
+           *   "symlink"  - symbolic link. Windows needs admin or Developer Mode.
+           *   "junction" - Windows directory junction: no admin needed, directories
+           *                only. On macOS and Linux it falls back to a symlink.
+           */
           "linkType": "symlink"
         }
       ]
@@ -66,18 +97,24 @@
           "scope": "items",
           "linkType": "symlink",
 
-          // Only with scope "items". Glob patterns matched against child names.
-          // Optional, default ["*"] (all). Prefer an explicit list so unrelated
-          // items are not pulled in.
+          /*
+           * "include" - only with scope "items". Glob patterns matched against
+           * child names. Optional, default ["*"] (everything). Prefer an explicit
+           * list so unrelated items are not pulled in.
+           */
           "include": ["skill-one", "skill-two"],
 
-          // Only with scope "items". Glob patterns to skip. Optional, default [].
+          // "exclude" - only with scope "items". Glob patterns to skip. Optional, default [].
           "exclude": [".DS_Store", ".gitkeep"]
         }
       ]
     },
 
-    // 3. Copy chosen items, for repos that must stay self-contained in git.
+    /*
+     * 3. Copy chosen items, for repos that must stay self-contained in git
+     *    (a symlink would point at a path that exists only on this machine).
+     *    "linkType" is omitted because nothing is linked.
+     */
     "copy-items": {
       "links": [
         {
