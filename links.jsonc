@@ -1,0 +1,129 @@
+// -*- mode: jsonc -*-
+{
+  "vars": {
+    "repo": "${self}",
+    "src": "${repo}/src",
+    "home": "${home}",
+    "vaults": "${home}/Obsidian"
+  },
+  "groups": {
+    // This repo's own root helper skills: link selected skills from src.
+    "repo-root": {
+      "links": [
+        {
+          "link": "${repo}/.agents/skills",
+          "target": "${src}/.agents/skills",
+          "method": "link",
+          "scope": "items",
+          "linkType": "symlink",
+          "include": ["git-structure-commits", "herdr"]
+        }
+      ]
+    },
+
+    // Global opencode config: agents, general skills and user-wide AGENTS.md.
+    "opencode-global": {
+      "links": [
+        {
+          "link": "${home}/.config/opencode/agents",
+          "target": "${src}/.opencode/agents",
+          "method": "link",
+          "scope": "folder",
+          "linkType": "symlink"
+        },
+        {
+          "link": "${home}/.config/opencode/AGENTS.md",
+          "target": "${src}/AGENTS.md",
+          "method": "link",
+          "scope": "folder",
+          "linkType": "symlink"
+        },
+        // The "general" category from tools/linkSkills/categories.json.
+        {
+          "link": "${home}/.config/opencode/skills",
+          "target": "${src}/.agents/skills",
+          "method": "link",
+          "scope": "items",
+          "linkType": "symlink",
+          "include": [
+            "asd-ste100",
+            "caveman",
+            "challenge-mode",
+            "diagnose",
+            "git-structure-commits",
+            "git-workflow-and-versioning",
+            "grill-me",
+            "grill-with-docs",
+            "herdr",
+            "improve-codebase-architecture",
+            "meta-skills-optimizer",
+            "notion",
+            "show-me",
+            "skill-creator",
+            "write-a-skill"
+          ]
+        }
+      ]
+    },
+
+    // Personal vault on this machine: symlinks into this repo.
+    "odyssey": {
+      "links": [
+        {
+          "link": "${vaults}/Odyssey/.agents/skills",
+          "target": "${src}/.agents/skills",
+          "method": "link",
+          "scope": "items",
+          "linkType": "symlink",
+          "include": [
+            "defuddle",
+            "git-structure-commits",
+            "json-canvas",
+            "notion",
+            "obsidian-bases",
+            "obsidian-cli",
+            "obsidian-markdown",
+            "obsidian-quickadd"
+          ]
+        }
+      ]
+    },
+
+    // Shared template repo: real copies so its git history stays self-contained.
+    "obsidian-template": {
+      "links": [
+        {
+          "link": "${vaults}/obsidian-template/.agents/skills",
+          "target": "${src}/.agents/skills",
+          "method": "copy",
+          "scope": "items",
+          "include": [
+            "defuddle",
+            "git-workflow-and-versioning",
+            "json-canvas",
+            "obsidian-bases",
+            "obsidian-cli",
+            "obsidian-markdown",
+            "obsidian-quickadd"
+          ],
+          "exclude": [".DS_Store"]
+        },
+        {
+          "link": "${vaults}/obsidian-template/template/.agents/skills",
+          "target": "${src}/.agents/skills",
+          "method": "copy",
+          "scope": "items",
+          "include": [
+            "defuddle",
+            "json-canvas",
+            "obsidian-bases",
+            "obsidian-cli",
+            "obsidian-markdown",
+            "obsidian-quickadd"
+          ],
+          "exclude": [".DS_Store"]
+        }
+      ]
+    }
+  }
+}
