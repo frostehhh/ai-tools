@@ -107,7 +107,7 @@ Adds baseline comparison for the Notion side: title/date change patches the even
 ### File Changes
 
 - **`src/reconcile.js`**: pure `decide(n, e, b)` covering the Notion-only branches; `eligible(task, config, today)`.
-- **`src/gcal.js`**: `listEvents(calendarId)` (mapped, `showDeleted`), `patchEvent`, `deleteEvent` (state saved before delete).
+- **`src/gcal.js`**: `listEvents(calendarId)` (mapped, `showDeleted`), `patchEvent`, `deleteEvent` (entry flagged `pendingDelete` and saved before DELETE; removed after success or 404/410; retried by later runs if DELETE fails).
 - **`src/sync.js`**: loop applies actions, saves state after each page, refreshes baseline after write.
 - **`test/reconcile.test.js`**: table-driven cases.
 
@@ -156,7 +156,7 @@ Adds Calendar-only and both-changed branches; Notion page patch; echo-loop prote
 
 ### File Changes
 
-- **`src/reconcile.js`**: cancelled/missing event with mapping → `markDropped` + tombstone; app-initiated deletes never hit this branch.
+- **`src/reconcile.js`**: cancelled/missing event with mapping → `markDropped` + tombstone; entries flagged `pendingDelete` are excluded, so app-initiated deletes never hit this branch.
 - **`src/notion.js`**: `setStatus(pageId, droppedStatus)` honoring status property type (V5).
 - **`src/sync.js`**: retry pending tombstones; skip creation while tombstoned; honors `onEventDeleted`.
 - **`test/reconcile.test.js`, `test/sync.test.js`**: user delete, failed Notion write retried, no recreate.
@@ -177,7 +177,7 @@ Adds Calendar-only and both-changed branches; Notion page patch; echo-loop prote
 
 ### File Changes
 
-- **`src/reminders.js`**: presets (`light`, `standard`, `heavy`) for all-day and timed, custom presets, `byTag` first-match, `toOverrides(preset, kind)`, max 5.
+- **`src/reminders.js`**: presets (`light`, `standard`, `heavy`) for all-day and timed, custom presets, `byTag` first-match, `toOverrides(preset, kind)`, max 5. Defaults use day-before times only; startup validation requires `allDay` and `timed` arrays and non-negative computed minutes.
 - **`src/gcal.js`**: event body `reminders: { useDefault: false, overrides }` on create.
 - **`src/sync.js`**: `reapplyReminders()`.
 - **`server.js`**: `POST /api/reapply-reminders`.

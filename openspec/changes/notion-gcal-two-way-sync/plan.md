@@ -67,14 +67,16 @@ Behavior-preserving split plus validated config, state v2, and a risk probe.
   "reminders": {
     "defaultPreset": "standard",
     "presets": {
-      "light":    { "allDay": [{ "daysBefore": 0, "at": "09:00" }], "timed": [{ "minutes": 10 }] },
-      "standard": { "allDay": [{ "daysBefore": 1, "at": "18:00" }, { "daysBefore": 0, "at": "09:00" }], "timed": [{ "minutes": 30 }, { "minutes": 10 }] },
-      "heavy":    { "allDay": [{ "daysBefore": 2, "at": "18:00" }, { "daysBefore": 1, "at": "18:00" }, { "daysBefore": 0, "at": "08:00" }, { "daysBefore": 0, "at": "12:00" }], "timed": [{ "minutes": 1440 }, { "minutes": 60 }, { "minutes": 10 }] }
+      "light":    { "allDay": [{ "daysBefore": 1, "at": "18:00" }], "timed": [{ "minutes": 10 }] },
+      "standard": { "allDay": [{ "daysBefore": 1, "at": "18:00" }, { "daysBefore": 1, "at": "21:00" }], "timed": [{ "minutes": 30 }, { "minutes": 10 }] },
+      "heavy":    { "allDay": [{ "daysBefore": 2, "at": "18:00" }, { "daysBefore": 1, "at": "18:00" }, { "daysBefore": 1, "at": "21:00" }, { "daysBefore": 1, "at": "23:00" }], "timed": [{ "minutes": 1440 }, { "minutes": 60 }, { "minutes": 10 }] }
     },
     "byTag": {}
   }
 }
 ```
+
+Startup validation also requires every preset to have both `allDay` and `timed` arrays, and every computed all-day minutes value (`daysBefore*1440 - mins(at)`) to be a non-negative integer. A preset failing either check is a config error at startup, not a runtime throw.
 
 Time zone value is a placeholder; the captain's zone is an open question.
 
@@ -452,7 +454,7 @@ export const deleteEvent = (vendor, calId, id) =>
 - [ ] 3.3 Orchestrator
 
 **File**: `T/src/sync.js`
-**Changes**: query now returns eligible tasks only, so a mapped `pageId` missing from the result means "left status list or window": delete event, `delete state.pages[id]` and `save()` **before** the DELETE call, then delete. Patch path rewrites baseline from the task after success.
+**Changes**: query now returns eligible tasks only, so a mapped `pageId` missing from the result means "left status list or window": delete event, set `state.pages[id].pendingDelete = true` and `save()` **before** the DELETE call, then DELETE; on success or 404/410 `delete state.pages[id]` and `save()`. On any other failure (network, 5xx) the flagged entry stays and a later run retries the DELETE. Entries flagged `pendingDelete` are never treated as user-deleted and never recreated; they are only retried. Patch path rewrites baseline from the task after success.
 
 - [ ] 3.4 Tests
 
@@ -555,7 +557,7 @@ User-deleted entry sets `Archived/Dropped` and is not recreated.
 - [ ] 5.1 Decide branch
 
 **File**: `T/src/reconcile.js`
-**Changes**: before change comparison, `if (baseline && task && (event === 'cancelled' || event == null)) return cfgDelete === 'markDropped' ? [{ kind: 'markDropped' }] : [{ kind: 'forget' }];`. App deletes never reach here because Phase 3 removes the state entry before deleting.
+**Changes**: before change comparison, `if (baseline && task && (event === 'cancelled' || event == null)) return cfgDelete === 'markDropped' ? [{ kind: 'markDropped' }] : [{ kind: 'forget' }];`. App deletes never reach here because entries flagged `pendingDelete` are handled by the Phase 3 retry path and excluded from this branch.
 
 - [ ] 5.2 Set status
 
@@ -619,7 +621,9 @@ export function overridesFor(task, cfg) {
 }
 ```
 
-Example: `{daysBefore:1, at:"18:00"}` → 1440 - 1080 = 360; `{daysBefore:0, at:"09:00"}` → -540, which Google rejects. Resolve in the plan phase by the V9 probe result: if offsets must be non-negative, "same day at 09:00" cannot be expressed with an all-day popup and the preset format must change. Recorded under Open Questions.
+Example: `{daysBefore:1, at:"18:00"}` → 1440 - 1080 = 360. Same-day clock times (e.g. `{daysBefore:0, at:"09:00"}` → -540) cannot be expressed as an all-day popup offset because Google rejects negative values; config validation rejects them and the shipped presets use only day-before times. Recorded under Unresolved Questions.
+
+The config validator rejects any preset lacking `allDay` or `timed`, so `overridesFor` never sees a missing key.
 
 - [ ] 6.2 Apply on create
 
@@ -746,7 +750,7 @@ Docs match behavior.
 - Time zone for config? (placeholder `Asia/Manila`)
 - Notion `Status` type `status` or `select`? (V5)
 - Does the proxy allow PATCH/DELETE/GET? Probe in Phase 1. If blocked, scope changes.
-- Same-day reminder at 09:00 needs a negative offset; does Google accept it for all-day events? If not, how should "morning of" be expressed? (V9)
+- Same-day-at-09:00 all-day reminders need a negative offset, which Google rejects, so they are unsupported and shipped defaults use day-before times only. Does the captain want a different way to express "morning of"? (V9)
 - Keep the dropped-status name `Archived/Dropped` exactly? (V6)
 - OK to drop time-of-day when `Due` has a time and the entry is edited in Calendar?
 - OK to ignore old `synced-tasks.json` rather than migrate?

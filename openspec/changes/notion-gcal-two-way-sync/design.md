@@ -165,10 +165,10 @@ Reccomendation: B. Baseline comparison is required anyway to avoid echoes; the c
 
 #### Detecting user-deleted vs app-deleted events
 
-- Option A: remove `pageId` from state before the app deletes an event, so a later cancelled event has no mapping.
-- Option B: mark `pendingDelete` in state, delete, then clear.
+- Option A: remove `pageId` from state before the app deletes an event, so a later cancelled event has no mapping. Fails if the DELETE then errors (network, 5xx): no mapping remains, so nothing retries and the event is orphaned.
+- Option B: set `pendingDelete` on the existing state entry, save, DELETE, then remove the entry on success or 404/410.
 
-Reccomendation: A, with state saved before the DELETE call; on crash between, the next run treats it as "not eligible" and re-deletes idempotently.
+Reccomendation: B. A later run retries any entry flagged `pendingDelete`; such entries are never treated as user-deleted and never recreated.
 
 #### Not recreating a dropped task
 
@@ -220,7 +220,7 @@ Reccomendation: A.
 
 #### Reminder minutes for all-day events
 
-Pending verification V9. Presets are expressed as `{ daysBefore, atTime: "HH:MM" }` or raw `minutes`.
+Pending verification V9. Presets are expressed as `{ daysBefore, at: "HH:MM" }` or raw `minutes`. Computed offsets must be non-negative, so shipped defaults use day-before evening times (e.g. 1 day before at 18:00 = 360); same-day-at-09:00 is unsupported and rejected by startup validation, as are presets missing `allDay` or `timed`.
 
 - Option A: presets as raw minutes-before-00:00 (matches Google's field; no conversion).
 - Option B: presets as local clock time + days before, converted to minutes.
